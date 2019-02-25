@@ -90,7 +90,7 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
 
             # Create the scatterplot
             mplf.draw_scatterplot(
-                obs_vals, prd_vals, metadata, output_type=mplf.FILE,
+                prd_vals, obs_vals, metadata, output_type=mplf.FILE,
                 output_file=output_file)
 
             # Add this to the list of scatterplot files
