@@ -1,6 +1,6 @@
 import re
 
-from matplotlib import mlab
+import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
@@ -83,9 +83,8 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         names = ['P_' + str(x) for x in range(1, 12)]
         names.insert(0, 'OBSERVED')
         names.extend(['TOTAL', 'CORRECT', 'FUZZY_CORRECT'])
-        vc_data = mlab.csv2rec(
-            self.vc_errmatrix_file, skiprows=1, names=names)
-        vc_data = mlab.rec_drop_fields(vc_data, ['OBSERVED'])
+        vc_df = pd.read_csv(self.vc_errmatrix_file, skiprows=1, names=names)
+        vc_df.drop(columns=['OBSERVED'], inplace=True)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -104,7 +103,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         prd_str = '<strong>Predicted Class</strong>'
         para = p.Paragraph(prd_str, styles['body_style_10_center'])
         header_row.append(para)
-        for i in range(len(vc_data) - 1):
+        for i in range(len(vc_df) - 1):
             header_row.append('')
         vegclass_table.append(header_row)
 
@@ -132,7 +131,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
             [(11, 12), (11, 13), (12, 11), (12, 13), (13, 11), (13, 12)]
 
         # Add the data
-        for (i, row) in enumerate(vc_data):
+        for (i, row) in enumerate(vc_df.itertuples(index=False)):
             vegclass_row = []
             for (j, elem) in enumerate(row):
 

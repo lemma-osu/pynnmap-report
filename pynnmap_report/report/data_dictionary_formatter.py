@@ -65,8 +65,9 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
         # identified to go into the report, and are not species variables
         attrs = []
         for attr in mp.attributes:
-            if attr.accuracy_attr == 1 and attr.project_attr == 1 and \
-                    attr.species_attr == 0:
+            if attr.is_accuracy_attr() is True and \
+                    attr.is_project_attr() is True and \
+                    attr.is_species_attr() is False:
                 attrs.append(attr.field_name)
 
         # Set up the master dictionary table

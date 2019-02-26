@@ -1,10 +1,10 @@
+import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
-from pynnmap.misc import utilities
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
@@ -29,7 +29,6 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
-
         # Format the species accuracy information into the main story
         story = self._create_story()
 
@@ -37,7 +36,6 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         return story
 
     def _create_story(self):
-
         # Set up an empty list to hold the story
         story = []
 
@@ -93,7 +91,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             OA/PP = Observed Absent / Predicted Present
             (errors of commission)<br/>
             OP/PA = Observed Present / Predicted Absent
-            (errors of ommission)<br/>
+            (errors of omission)<br/>
             OA/PA = Observed Absent / Predicted Absent
         '''
         para = p.Paragraph(kappa_str, styles['body_style'])
@@ -141,7 +139,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         species_table.append(header_row)
 
         # Open the species accuracy file into a recarray
-        spp_data = utilities.csv2rec(self.species_accuracy_file)
+        spp_df = pd.read_csv(self.species_accuracy_file)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -155,12 +153,11 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         # Subset the attributes to just species
         attrs = []
         for attr in mp.attributes:
-            if attr.species_attr == 1 and 'NOTALY' not in attr.field_name:
+            if attr.is_species_attr() is True and 'NOTALY' not in attr.field_name:
                 attrs.append(attr.field_name)
 
         # Iterate over the species and print out the statistics
         for spp in attrs:
-
             # Empty row to hold the formatted output
             species_row = []
 
@@ -183,7 +180,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             species_row.append(para)
 
             # Get the statistical information
-            data = spp_data[spp_data.SPECIES == spp][0]
+            data = spp_df[spp_df.SPECIES == spp]
             counts = [data.OP_PP, data.OP_PA, data.OA_PP, data.OA_PA]
             prevalence = data.PREVALENCE
             kappa = data.KAPPA

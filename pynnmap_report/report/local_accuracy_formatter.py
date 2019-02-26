@@ -1,15 +1,15 @@
 import os
 
-import numpy as np
+import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
+from pynnmap.misc import mpl_figures as mplf
+from pynnmap.parser import xml_stand_metadata_parser as xsmp
+
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
-from pynnmap.misc import mpl_figures as mplf
-from pynnmap.misc import utilities
-from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class LocalAccuracyFormatter(report_formatter.ReportFormatter):
@@ -33,7 +33,6 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
-
         # Create the scatterplots
         self.scatter_files = self._create_scatterplots()
 
@@ -44,23 +43,18 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         return story
 
     def clean_up(self):
-
         # Remove the scatterplots
         for fn in self.scatter_files:
             if os.path.exists(fn):
                 os.remove(fn)
 
     def _create_scatterplots(self):
+        # Read in the observed and predicted CSV files
+        obs_df = pd.read_csv(self.observed_file, index_col=self.id_field)
+        prd_df = pd.read_csv(self.predicted_file, index_col=self.id_field)
 
-        # Open files into recarrays
-        obs_data = utilities.csv2rec(self.observed_file)
-        prd_data = utilities.csv2rec(self.predicted_file)
-
-        # Subset the obs_data to just those IDs in the predicted data
-        ids1 = getattr(obs_data, self.id_field)
-        ids2 = getattr(prd_data, self.id_field)
-        common_ids = np.in1d(ids1, ids2)
-        obs_data = obs_data[common_ids]
+        # Subset the obs_df to just those IDs in the predicted data
+        obs_df = obs_df[obs_df.index.isin(prd_df.index)]
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -70,8 +64,10 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         # species variables
         attrs = []
         for attr in mp.attributes:
-            if attr.field_type == 'CONTINUOUS' and attr.project_attr == 1 and \
-                    attr.accuracy_attr == 1 and attr.species_attr == 0:
+            if attr.field_type == 'CONTINUOUS' and \
+                    attr.is_project_attr() is True and \
+                    attr.is_accuracy_attr() is True and \
+                    attr.is_species_attr() is False:
                 attrs.append(attr.field_name)
 
         # Iterate over the attributes and create a scatterplot file of each
@@ -82,8 +78,7 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             metadata = mp.get_attribute(attr)
 
             # Observed and predicted data matrices for this attribute
-            obs_vals = getattr(obs_data, attr)
-            prd_vals = getattr(prd_data, attr)
+            obs_vals, prd_vals = obs_df[attr], prd_df[attr]
 
             # Create the output file name
             output_file = attr.lower() + '_scatter.png'
