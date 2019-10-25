@@ -10,14 +10,14 @@ class MissingConstraintError(Exception):
 
 
 class ReportFormatter(object):
-
     # Set up an enumeration for the different pages
     (TITLE, PORTRAIT, LANDSCAPE) = ('title', 'portrait', 'landscape')
 
     def __init__(self):
         pass
 
-    def check_missing_files(self, files):
+    @staticmethod
+    def check_missing_files(files):
         missing_files = []
         for f in files:
             if not os.path.exists(f):
@@ -28,30 +28,24 @@ class ReportFormatter(object):
                 err_msg += '\n' + f + ' does not exist'
             raise MissingConstraintError(err_msg)
 
-    def _make_page_break(self, story, orientation):
-
-        # Set up the next page template
+    @staticmethod
+    def _make_page_break(story, orientation):
         story.append(p.NextPageTemplate(orientation))
-
-        # Add the page break
         story.append(p.PageBreak())
-
-        # Return this
         return story
 
-    def txt_to_html(self, in_str):
+    @staticmethod
+    def txt_to_html(in_str):
         replace_list = {
             '>': '&gt;',
             '<': '&lt;',
         }
-
         for i in replace_list:
             in_str = re.sub(i, replace_list[i], in_str)
-
         return in_str
 
     def run_formatter(self):
         raise NotImplementedError
 
     def clean_up(self):
-        pass
+        raise NotImplementedError

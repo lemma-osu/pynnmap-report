@@ -163,8 +163,10 @@ def get_report_styles():
     return report_styles
 
 
-def _doNothing(canvas, doc):
-    "Dummy callback for onPage"
+def _do_nothing(canvas, doc):
+    """
+    Dummy callback for onPage
+    """
     pass
 
 
@@ -219,8 +221,8 @@ def landscape(canvas, doc):
 class GnnDocTemplate(p.BaseDocTemplate):
 
     def build(
-            self, flowables, onTitle=_doNothing, onPortrait=_doNothing,
-            onLandscape=_doNothing, canvasmaker=canvas.Canvas):
+            self, flowables, onTitle=_do_nothing, onPortrait=_do_nothing,
+            onLandscape=_do_nothing, canvasmaker=canvas.Canvas):
 
         # Force the pagesize to be a letter
         self.pagesize = [8.5 * u.inch, 11.0 * u.inch]
@@ -260,11 +262,11 @@ class GnnDocTemplate(p.BaseDocTemplate):
                 onPage=onLandscape,
                 pagesize=pagesizes.landscape(pagesizes.letter))])
 
-        if onTitle is _doNothing and hasattr(self, 'onTitle'):
+        if onTitle is _do_nothing and hasattr(self, 'onTitle'):
             self.pageTemplates[0].beforeDrawPage = self.onTitle
-        if onPortrait is _doNothing and hasattr(self, 'onPortrait'):
+        if onPortrait is _do_nothing and hasattr(self, 'onPortrait'):
             self.pageTemplates[1].beforeDrawPage = self.onPortrait
-        if onLandscape is _doNothing and hasattr(self, 'onLandscape'):
+        if onLandscape is _do_nothing and hasattr(self, 'onLandscape'):
             self.pageTemplates[2].beforeDrawPage = self.onLandscape
 
         # Use the base class to call build

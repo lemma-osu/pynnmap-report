@@ -32,12 +32,10 @@ class IntroductionFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
+        return self._create_story()
 
-        # Create the story
-        story = self._create_story()
-
-        # Return the finished story
-        return story
+    def clean_up(self):
+        pass
 
     def _create_story(self):
 

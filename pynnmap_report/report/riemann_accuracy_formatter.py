@@ -9,3 +9,6 @@ class RiemannAccuracyFormatter(report_formatter.ReportFormatter):
 
     def run_formatter(self):
         print('Formatting Riemann accuracy')
+
+    def clean_up(self):
+        pass

@@ -37,10 +37,7 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         self.scatter_files = self._create_scatterplots()
 
         # Format the scatterplots into the main story
-        story = self._create_story(self.scatter_files)
-
-        # Return the finished story
-        return story
+        return self._create_story(self.scatter_files)
 
     def clean_up(self):
         # Remove the scatterplots
@@ -95,7 +92,6 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         return scatter_files
 
     def _create_story(self, scatter_files):
-
         # Set up an empty list to hold the story
         story = []
 

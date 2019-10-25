@@ -6,4 +6,5 @@ dist
 
 # Miscellaneous files
 .idea
+.vscode
 *.swp

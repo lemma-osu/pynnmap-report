@@ -29,11 +29,10 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
-        # Format the species accuracy information into the main story
-        story = self._create_story()
+        return self._create_story()
 
-        # Return the finished story
-        return story
+    def clean_up(self):
+        pass
 
     def _create_story(self):
         # Set up an empty list to hold the story
@@ -153,7 +152,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         # Subset the attributes to just species
         attrs = []
         for attr in mp.attributes:
-            if attr.is_species_attr() is True and 'NOTALY' not in attr.field_name:
+            if attr.is_species_attr() and 'NOTALY' not in attr.field_name:
                 attrs.append(attr.field_name)
 
         # Iterate over the species and print out the statistics
