@@ -160,105 +160,105 @@ def get_report_styles():
     )
     report_styles['section_style'] = section_style
 
+    default_table_style = p.TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.white),
+        ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+    ])
+    report_styles['default_table_style'] = default_table_style
+
     return report_styles
 
 
-def _do_nothing(canvas, doc):
-    """
-    Dummy callback for onPage
-    """
+def _do_nothing(_, doc):
     pass
 
 
-def title(canvas, doc):
-    canvas.saveState()
-
-    lemma_img = 'L:/resources/code/models/accuracy_assessment/report/images/'
-    lemma_img += 'lemma_logo.gif'
-
-    # Page background
-    canvas.setStrokeColor(colors.black)
-    canvas.setLineWidth(1)
-    canvas.setFillColor('#e6ded5')
-    canvas.roundRect(
+def _set_portrait_background(cnv):
+    cnv.setStrokeColor(colors.black)
+    cnv.setLineWidth(1)
+    cnv.setFillColor('#e6ded5')
+    cnv.roundRect(
         0.5 * u.inch, 0.5 * u.inch, 7.5 * u.inch, 10.0 * u.inch, 0.15 * u.inch,
         stroke=1, fill=1)
 
-    # Page banner - image
-    canvas.drawImage(
+
+def title(cnv, doc):
+    cnv.saveState()
+    _set_portrait_background(cnv)
+
+    # Draw banner image
+    lemma_img = (
+        'L:/resources/code/models/accuracy_assessment/report/images/'
+        'lemma_logo.gif'
+    )
+    cnv.drawImage(
         lemma_img, 0.5 * u.inch, 7.5 * u.inch, width=7.5 * u.inch,
         height=3 * u.inch, mask='auto')
 
-    canvas.restoreState()
+    cnv.restoreState()
 
 
-def portrait(canvas, doc):
-    canvas.saveState()
-
-    # Page background
-    canvas.setStrokeColor(colors.black)
-    canvas.setLineWidth(1)
-    canvas.setFillColor('#e6ded5')
-    canvas.roundRect(
-        0.5 * u.inch, 0.5 * u.inch, 7.5 * u.inch, 10.0 * u.inch, 0.15 * u.inch,
-        stroke=1, fill=1)
-    canvas.restoreState()
+def portrait(cnv, doc):
+    cnv.saveState()
+    _set_portrait_background(cnv)
+    cnv.restoreState()
 
 
-def landscape(canvas, doc):
-    canvas.saveState()
+def landscape(cnv, doc):
+    cnv.saveState()
 
     # Page background
-    canvas.setStrokeColor(colors.black)
-    canvas.setLineWidth(1)
-    canvas.setFillColor('#e6ded5')
-    canvas.roundRect(
+    cnv.setStrokeColor(colors.black)
+    cnv.setLineWidth(1)
+    cnv.setFillColor('#e6ded5')
+    cnv.roundRect(
         0.5 * u.inch, 0.5 * u.inch, 10.0 * u.inch, 7.5 * u.inch, 0.15 * u.inch,
         stroke=1, fill=1)
-    canvas.restoreState()
+    cnv.restoreState()
 
 
 class GnnDocTemplate(p.BaseDocTemplate):
+    def __init__(self, fn, **kwargs):
+        super(GnnDocTemplate, self).__init__(fn, **kwargs)
+        self.pagesize = [8.5 * u.inch, 11.0 * u.inch]
 
     def build(
             self, flowables, onTitle=_do_nothing, onPortrait=_do_nothing,
             onLandscape=_do_nothing, canvasmaker=canvas.Canvas):
 
-        # Force the pagesize to be a letter
-        self.pagesize = [8.5 * u.inch, 11.0 * u.inch]
-
         # Recalculate in case we changed margins, sizes, etc
         self._calc()
 
         # Portrait frame
-        framePortrait = \
-            p.Frame(
-                self.leftMargin, self.bottomMargin, self.width, self.height,
-                id='portraitFrame')
+        frame_portrait = p.Frame(
+            self.leftMargin, self.bottomMargin, self.width, self.height,
+            id='portraitFrame')
 
         # Landscape frame
-        frameLandscape = \
-            p.Frame(
-                0.75 * u.inch, 0.5 * u.inch, 9.5 * u.inch, 7.4 * u.inch,
-                id='landscapeFrame')
+        frame_landscape = p.Frame(
+            0.75 * u.inch, 0.5 * u.inch, 9.5 * u.inch, 7.4 * u.inch,
+            id='landscapeFrame')
 
         # Add page templates to this document template
         self.addPageTemplates([
             p.PageTemplate(
                 id='title',
-                frames=framePortrait,
+                frames=frame_portrait,
                 onPage=onTitle,
                 pagesize=pagesizes.portrait(pagesizes.letter)),
 
             p.PageTemplate(
                 id='portrait',
-                frames=framePortrait,
+                frames=frame_portrait,
                 onPage=onPortrait,
                 pagesize=pagesizes.portrait(pagesizes.letter)),
 
             p.PageTemplate(
                 id='landscape',
-                frames=frameLandscape,
+                frames=frame_landscape,
                 onPage=onLandscape,
                 pagesize=pagesizes.landscape(pagesizes.letter))])
 

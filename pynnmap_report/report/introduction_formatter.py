@@ -328,16 +328,7 @@ class IntroductionFormatter(report_formatter.ReportFormatter):
 
             # Create the inner table
             t = p.Table(pc_table)
-
-            # Table style
-            t.setStyle(
-                p.TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                    ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('TOPPADDING', (0, 0), (-1, -1), 2),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-                ]))
+            t.setStyle(styles['default_table_style'])
 
             # Add data_source and description to the table
             p1 = p.Paragraph(ds.data_source, styles['contact_style'])

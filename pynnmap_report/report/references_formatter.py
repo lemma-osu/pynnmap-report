@@ -1,5 +1,4 @@
 from reportlab import platypus as p
-from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap_report.report import report_formatter
@@ -30,18 +29,7 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
 
         # Section title
         title_str = '<strong>References</strong>'
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # List of references used

@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 from reportlab import platypus as p
-from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap_report.report import report_formatter
@@ -118,19 +117,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         title_str = '<strong>Regional-Scale Accuracy Assessment:<br/> Area '
         title_str += 'Distributions from Regional Inventory Plots vs. '
         title_str += 'GNN</strong>'
-
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.20 * u.inch))
 
         # Histogram explanation
@@ -168,38 +155,11 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             For the plots, the 'nonforest' bar represents the nonforest area
             as estimated from the FIA Annual sample.
         '''
-
-        para = p.Paragraph(histo_str, styles['body_style'])
-        story.append(para)
+        story.append(p.Paragraph(histo_str, styles['body_style']))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
-        # Add the histogram images to a list of lists
-        table_cols = 2
-        histogram_table = []
-        histogram_row = []
-        for (i, fn) in enumerate(histogram_files):
-            histogram_row.append(p.Image(fn, 3.4 * u.inch, 3.0 * u.inch))
-            if (i % table_cols) == (table_cols - 1):
-                histogram_table.append(histogram_row)
-                histogram_row = []
-
-        # Determine if there are any histograms left to print
-        if len(histogram_row) != 0:
-            for i in range(len(histogram_row), table_cols):
-                histogram_row.append(p.Paragraph('', styles['body_style']))
-            histogram_table.append(histogram_row)
-
-        # Style this into a reportlab table and add to the story
-        width = 3.75 * u.inch
-        t = p.Table(histogram_table, colWidths=[width, width])
-        t.setStyle(
-            p.TableStyle([
-                ('ALIGNMENT', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6.0),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6.0),
-            ]))
-        story.append(t)
+        # Create a table of histograms and add to story
+        story.append(self._make_figure_table(histogram_files))
 
         # Return this story
         return story

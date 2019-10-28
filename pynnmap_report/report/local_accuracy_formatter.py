@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 from reportlab import platypus as p
-from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap.misc import mpl_figures as mplf
@@ -106,19 +105,7 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         title_str += 'Scatterplots of Observed vs. Predicted '
         title_str += 'Values for Continuous Variables at '
         title_str += 'Plot Locations</strong>'
-
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Scatter explanation
@@ -146,38 +133,11 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             given. The RMSE is normalized by dividing the RMSE by the
             observed mean value.
         '''
-
-        para = p.Paragraph(scatter_str, styles['body_style'])
-        story.append(para)
+        story.append(p.Paragraph(scatter_str, styles['body_style']))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
-        # Add the scatterplot images to a list of lists
-        table_cols = 2
-        scatter_table = []
-        scatter_row = []
-        for (i, fn) in enumerate(scatter_files):
-            scatter_row.append(p.Image(fn, 3.4 * u.inch, 3.0 * u.inch))
-            if (i % table_cols) == (table_cols - 1):
-                scatter_table.append(scatter_row)
-                scatter_row = []
-
-        # Determine if there are any scatterplots left to print
-        if len(scatter_row) != 0:
-            for i in range(len(scatter_row), table_cols):
-                scatter_row.append(p.Paragraph('', styles['body_style']))
-            scatter_table.append(scatter_row)
-
-        # Style this into a reportlab table and add to the story
-        width = 3.75 * u.inch
-        t = p.Table(scatter_table, colWidths=[width, width])
-        t.setStyle(
-            p.TableStyle([
-                ('ALIGNMENT', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6.0),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6.0),
-            ]))
-        story.append(t)
+        # Create a table of scatterplots and add to story
+        story.append(self._make_figure_table(scatter_files))
 
         # Return this story
         return story

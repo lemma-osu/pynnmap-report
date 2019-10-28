@@ -48,19 +48,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         title_str = '<strong>Local-Scale Accuracy Assessment:<br/>'
         title_str += 'Species Accuracy at Plot Locations'
         title_str += '</strong>'
-
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Kappa explanation
@@ -122,14 +110,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             '<strong>OA/PA</strong>', styles['body_style_10_right'])
         header_cells = [[p1, p2], [p3, p4]]
         t = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ]))
+        t.setStyle(styles['default_table_style'])
         header_row.append(t)
 
         kappa_str = '<strong>Kappa coefficient</strong>'
@@ -200,14 +181,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
                     count_cells.append(count_row)
                     count_row = []
             t = p.Table(count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-            t.setStyle(
-                p.TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                    ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('TOPPADDING', (0, 0), (-1, -1), 2),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-                ]))
+            t.setStyle(styles['default_table_style'])
             species_row.append(t)
 
             # Print out the kappa statistic
