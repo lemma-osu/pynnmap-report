@@ -1,13 +1,13 @@
 import os
 
 import numpy as np
+import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import units as u
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
 from pynnmap.misc import mpl_figures as mplf
-from pynnmap.misc import utilities
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
@@ -30,15 +30,11 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
-
         # Create the histograms
         self.histogram_files = self._create_histograms()
 
         # Format the histograms into the main story
-        story = self._create_story(self.histogram_files)
-
-        # Return the finished story
-        return story
+        return self._create_story(self.histogram_files)
 
     def clean_up(self):
 
@@ -50,7 +46,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
     def _create_histograms(self):
 
         # Open the area estimate file into a recarray
-        ae_data = utilities.csv2rec(self.regional_accuracy_file)
+        ae_data = pd.read_csv(self.regional_accuracy_file)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -59,8 +55,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # are identified to go into the report, and are not species variables
         attrs = []
         for attr in mp.attributes:
-            if attr.accuracy_attr == 1 and attr.project_attr == 1 and \
-                    attr.species_attr == 0:
+            if attr.is_accuracy_attr() and attr.is_project_attr() and \
+                    not attr.is_species_attr():
                 attrs.append(attr.field_name)
 
         # Iterate over the attributes and create a histogram file of each
@@ -80,7 +76,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
             # Set the bin names (same for both observed and predicted series)
             bin_names = obs_vals.BIN_NAME
-            if np.all(bin_names != prd_vals.BIN_NAME):
+            if not np.array_equal(bin_names.values, prd_vals.BIN_NAME.values):
                 err_msg = 'Bin names are not the same for ' + attr
                 raise ValueError(err_msg)
 
@@ -98,7 +94,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # Return the list of histograms just created
         return histogram_files
 
-    def _get_histogram_data(self, ae_data, attr, dataset):
+    @staticmethod
+    def _get_histogram_data(ae_data, attr, dataset):
         conds = (ae_data.VARIABLE == attr) & (ae_data.DATASET == dataset)
         return ae_data[conds]
 

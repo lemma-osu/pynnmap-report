@@ -61,9 +61,9 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         attrs = []
         for attr in mp.attributes:
             if attr.field_type == 'CONTINUOUS' and \
-                    attr.is_project_attr() is True and \
-                    attr.is_accuracy_attr() is True and \
-                    attr.is_species_attr() is False:
+                    attr.is_project_attr() and \
+                    attr.is_accuracy_attr() and \
+                    not attr.is_species_attr():
                 attrs.append(attr.field_name)
 
         # Iterate over the attributes and create a scatterplot file of each
