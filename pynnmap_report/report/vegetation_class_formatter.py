@@ -1,6 +1,6 @@
 import re
 
-from matplotlib import mlab
+import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
@@ -12,7 +12,6 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class VegetationClassFormatter(report_formatter.ReportFormatter):
-
     def __init__(self, parameter_parser):
         super(VegetationClassFormatter, self).__init__()
         pp = parameter_parser
@@ -28,15 +27,13 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
-
         # Push the vegclass error matrix into the main story
-        story = self._create_story()
+        return self._create_story()
 
-        # Return the finished story
-        return story
+    def clean_up(self):
+        pass
 
     def _create_story(self):
-
         # Set up an empty list to hold the story
         story = []
 
@@ -49,8 +46,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         # This class is somewhat of a hack, in that it likely only works on
         # rotated paragraphs which fit into the desired cell area
         class RotatedParagraph(p.Paragraph):
-
-            def wrap(self, availHeight, availWidth):
+            def wrap(self, avail_height, avail_width):
                 h, w = p.Paragraph.wrap(
                     self, self.canv.stringWidth(self.text), self.canv._leading)
                 return w, h
@@ -83,9 +79,8 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         names = ['P_' + str(x) for x in range(1, 12)]
         names.insert(0, 'OBSERVED')
         names.extend(['TOTAL', 'CORRECT', 'FUZZY_CORRECT'])
-        vc_data = mlab.csv2rec(
-            self.vc_errmatrix_file, skiprows=1, names=names)
-        vc_data = mlab.rec_drop_fields(vc_data, ['OBSERVED'])
+        vc_df = pd.read_csv(self.vc_errmatrix_file, skiprows=1, names=names)
+        vc_df.drop(columns=['OBSERVED'], inplace=True)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -104,7 +99,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         prd_str = '<strong>Predicted Class</strong>'
         para = p.Paragraph(prd_str, styles['body_style_10_center'])
         header_row.append(para)
-        for i in range(len(vc_data) - 1):
+        for i in range(len(vc_df) - 1):
             header_row.append('')
         vegclass_table.append(header_row)
 
@@ -132,7 +127,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
             [(11, 12), (11, 13), (12, 11), (12, 13), (13, 11), (13, 12)]
 
         # Add the data
-        for (i, row) in enumerate(vc_data):
+        for (i, row) in enumerate(vc_df.itertuples(index=False)):
             vegclass_row = []
             for (j, elem) in enumerate(row):
 
@@ -171,9 +166,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
             vegclass_table.append(vegclass_row)
 
         # Set up the widths for the table cells
-        widths = []
-        widths.append(0.3)
-        widths.append(0.85)
+        widths = [0.3, 0.85]
         for i in range(len(vc_codes)):
             widths.append(0.56)
         for i in range(3):
@@ -212,18 +205,19 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
                 ]))
 
         # Set up the shading for the fuzzy correct cells
-        fuzzy = {}
-        fuzzy[1] = [2]
-        fuzzy[2] = [1, 3, 5, 8]
-        fuzzy[3] = [2, 4, 5]
-        fuzzy[4] = [3, 6, 7]
-        fuzzy[5] = [2, 3, 6, 8]
-        fuzzy[6] = [4, 5, 7, 9]
-        fuzzy[7] = [4, 6, 10, 11]
-        fuzzy[8] = [2, 5, 9]
-        fuzzy[9] = [6, 8, 10]
-        fuzzy[10] = [7, 9, 11]
-        fuzzy[11] = [7, 10]
+        fuzzy = {
+            1: [2],
+            2: [1, 3, 5, 8],
+            3: [2, 4, 5],
+            4: [3, 6, 7],
+            5: [2, 3, 6, 8],
+            6: [4, 5, 7, 9],
+            7: [4, 6, 10, 11],
+            8: [2, 5, 9],
+            9: [6, 8, 10],
+            10: [7, 9, 11],
+            11: [7, 10],
+        }
 
         for key in fuzzy:
             for elem in fuzzy[key]:

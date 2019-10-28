@@ -1,5 +1,10 @@
+# Build files
 build
 dist
 *.egg-info
 *.pyc
+
+# Miscellaneous files
+.idea
+.vscode
 *.swp

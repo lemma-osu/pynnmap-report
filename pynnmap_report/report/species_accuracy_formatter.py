@@ -1,10 +1,10 @@
+import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
-from pynnmap.misc import utilities
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
@@ -29,15 +29,12 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
+        return self._create_story()
 
-        # Format the species accuracy information into the main story
-        story = self._create_story()
-
-        # Return the finished story
-        return story
+    def clean_up(self):
+        pass
 
     def _create_story(self):
-
         # Set up an empty list to hold the story
         story = []
 
@@ -51,19 +48,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         title_str = '<strong>Local-Scale Accuracy Assessment:<br/>'
         title_str += 'Species Accuracy at Plot Locations'
         title_str += '</strong>'
-
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Kappa explanation
@@ -93,7 +78,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             OA/PP = Observed Absent / Predicted Present
             (errors of commission)<br/>
             OP/PA = Observed Present / Predicted Absent
-            (errors of ommission)<br/>
+            (errors of omission)<br/>
             OA/PA = Observed Absent / Predicted Absent
         '''
         para = p.Paragraph(kappa_str, styles['body_style'])
@@ -125,14 +110,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             '<strong>OA/PA</strong>', styles['body_style_10_right'])
         header_cells = [[p1, p2], [p3, p4]]
         t = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ]))
+        t.setStyle(styles['default_table_style'])
         header_row.append(t)
 
         kappa_str = '<strong>Kappa coefficient</strong>'
@@ -141,7 +119,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         species_table.append(header_row)
 
         # Open the species accuracy file into a recarray
-        spp_data = utilities.csv2rec(self.species_accuracy_file)
+        spp_df = pd.read_csv(self.species_accuracy_file)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -155,12 +133,11 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         # Subset the attributes to just species
         attrs = []
         for attr in mp.attributes:
-            if attr.species_attr == 1 and 'NOTALY' not in attr.field_name:
+            if attr.is_species_attr() and 'NOTALY' not in attr.field_name:
                 attrs.append(attr.field_name)
 
         # Iterate over the species and print out the statistics
         for spp in attrs:
-
             # Empty row to hold the formatted output
             species_row = []
 
@@ -183,7 +160,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             species_row.append(para)
 
             # Get the statistical information
-            data = spp_data[spp_data.SPECIES == spp][0]
+            data = spp_df[spp_df.SPECIES == spp]
             counts = [data.OP_PP, data.OP_PA, data.OA_PP, data.OA_PA]
             prevalence = data.PREVALENCE
             kappa = data.KAPPA
@@ -204,14 +181,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
                     count_cells.append(count_row)
                     count_row = []
             t = p.Table(count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-            t.setStyle(
-                p.TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                    ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('TOPPADDING', (0, 0), (-1, -1), 2),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-                ]))
+            t.setStyle(styles['default_table_style'])
             species_row.append(t)
 
             # Print out the kappa statistic

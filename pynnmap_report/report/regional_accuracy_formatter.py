@@ -1,14 +1,13 @@
 import os
 
 import numpy as np
+import pandas as pd
 from reportlab import platypus as p
-from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
 from pynnmap.misc import mpl_figures as mplf
-from pynnmap.misc import utilities
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
@@ -31,15 +30,11 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
-
         # Create the histograms
         self.histogram_files = self._create_histograms()
 
         # Format the histograms into the main story
-        story = self._create_story(self.histogram_files)
-
-        # Return the finished story
-        return story
+        return self._create_story(self.histogram_files)
 
     def clean_up(self):
 
@@ -51,7 +46,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
     def _create_histograms(self):
 
         # Open the area estimate file into a recarray
-        ae_data = utilities.csv2rec(self.regional_accuracy_file)
+        ae_data = pd.read_csv(self.regional_accuracy_file)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -60,8 +55,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # are identified to go into the report, and are not species variables
         attrs = []
         for attr in mp.attributes:
-            if attr.accuracy_attr == 1 and attr.project_attr == 1 and \
-                    attr.species_attr == 0:
+            if attr.is_accuracy_attr() and attr.is_project_attr() and \
+                    not attr.is_species_attr():
                 attrs.append(attr.field_name)
 
         # Iterate over the attributes and create a histogram file of each
@@ -81,7 +76,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
             # Set the bin names (same for both observed and predicted series)
             bin_names = obs_vals.BIN_NAME
-            if np.all(bin_names != prd_vals.BIN_NAME):
+            if not np.array_equal(bin_names.values, prd_vals.BIN_NAME.values):
                 err_msg = 'Bin names are not the same for ' + attr
                 raise ValueError(err_msg)
 
@@ -99,7 +94,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # Return the list of histograms just created
         return histogram_files
 
-    def _get_histogram_data(self, ae_data, attr, dataset):
+    @staticmethod
+    def _get_histogram_data(ae_data, attr, dataset):
         conds = (ae_data.VARIABLE == attr) & (ae_data.DATASET == dataset)
         return ae_data[conds]
 
@@ -118,19 +114,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         title_str = '<strong>Regional-Scale Accuracy Assessment:<br/> Area '
         title_str += 'Distributions from Regional Inventory Plots vs. '
         title_str += 'GNN</strong>'
-
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.20 * u.inch))
 
         # Histogram explanation
@@ -168,38 +152,11 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             For the plots, the 'nonforest' bar represents the nonforest area
             as estimated from the FIA Annual sample.
         '''
-
-        para = p.Paragraph(histo_str, styles['body_style'])
-        story.append(para)
+        story.append(p.Paragraph(histo_str, styles['body_style']))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
-        # Add the histogram images to a list of lists
-        table_cols = 2
-        histogram_table = []
-        histogram_row = []
-        for (i, fn) in enumerate(histogram_files):
-            histogram_row.append(p.Image(fn, 3.4 * u.inch, 3.0 * u.inch))
-            if (i % table_cols) == (table_cols - 1):
-                histogram_table.append(histogram_row)
-                histogram_row = []
-
-        # Determine if there are any histograms left to print
-        if len(histogram_row) != 0:
-            for i in range(len(histogram_row), table_cols):
-                histogram_row.append(p.Paragraph('', styles['body_style']))
-            histogram_table.append(histogram_row)
-
-        # Style this into a reportlab table and add to the story
-        width = 3.75 * u.inch
-        t = p.Table(histogram_table, colWidths=[width, width])
-        t.setStyle(
-            p.TableStyle([
-                ('ALIGNMENT', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6.0),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6.0),
-            ]))
-        story.append(t)
+        # Create a table of histograms and add to story
+        story.append(self._make_figure_table(histogram_files))
 
         # Return this story
         return story

@@ -24,12 +24,10 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
+        return self._create_story()
 
-        # Format the scatterplots into the main story
-        story = self._create_story()
-
-        # Return the finished story
-        return story
+    def clean_up(self):
+        pass
 
     def _create_story(self):
 
@@ -44,18 +42,7 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
 
         # Section title
         title_str = '<strong>Data Dictionary</strong>'
-        para = p.Paragraph(title_str, styles['section_style'])
-        t = p.Table([[para]], colWidths=[7.5 * u.inch])
-        t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
-        story.append(t)
+        story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Read in the stand attribute metadata
@@ -65,8 +52,9 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
         # identified to go into the report, and are not species variables
         attrs = []
         for attr in mp.attributes:
-            if attr.accuracy_attr == 1 and attr.project_attr == 1 and \
-                    attr.species_attr == 0:
+            if attr.is_accuracy_attr() is True and \
+                    attr.is_project_attr() is True and \
+                    attr.is_species_attr() is False:
                 attrs.append(attr.field_name)
 
         # Set up the master dictionary table
