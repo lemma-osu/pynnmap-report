@@ -19,5 +19,6 @@ setup(
     entry_points='''
         [pynnmap.cli_commands]
         old-report=pynnmap_report.cli.old_report:old_report
+        report=pynnmap_report.cli.report:report
     ''',
 )
