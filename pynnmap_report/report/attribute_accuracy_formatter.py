@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from reportlab.lib.units import inch
 from reportlab.platypus import Image, PageBreak, Paragraph, Spacer, Table
@@ -78,6 +80,7 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
         self.stylesheet = get_stylesheet()
         self.riemann_dir = pp.riemann_output_folder
         self.k = pp.k
+        self.image_files = []
 
     def _get_riemann_fn(self, resolution, observed=True):
         if observed:
@@ -103,13 +106,21 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
         return flowables
 
     def clean_up(self):
-        pass
+        for fn in self.image_files:
+            if os.path.exists(fn):
+                os.remove(fn)
 
     def build_flowable_page(self, attr):
         scatter_fn = self.build_scatterplot_from_data(attr, kde=True)
         riemann_10_fn = self.build_riemann_scatterplot_from_data(attr, 10)
         riemann_30_fn = self.build_riemann_scatterplot_from_data(attr, 30)
         riemann_50_fn = self.build_riemann_scatterplot_from_data(attr, 50)
+
+        # Push these filenames to the image_files list so that they
+        # are deleted when report has been written
+        self.image_files.extend((
+            scatter_fn, riemann_10_fn, riemann_30_fn, riemann_50_fn
+        ))
 
         title = attr.field_name + ' (' + attr.units + ')'
         table_style = [

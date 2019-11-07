@@ -47,6 +47,7 @@ class LemmaAccuracyReport(accuracy_report.AccuracyReport):
             sub_story = f.run_formatter()
             if sub_story is not None:
                 self.story.extend(sub_story[:])
+                del sub_story
 
         # Write out the story
         doc.build(self.story)
