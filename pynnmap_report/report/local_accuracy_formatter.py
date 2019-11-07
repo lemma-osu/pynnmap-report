@@ -9,6 +9,7 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
+from pynnmap_report.report import utilities
 
 
 class LocalAccuracyFormatter(report_formatter.ReportFormatter):
@@ -32,8 +33,12 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             raise e
 
     def run_formatter(self):
+        # Read in the stand attribute metadata
+        mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
+        attrs = utilities.get_continuous_attrs(mp)
+
         # Create the scatterplots
-        self.scatter_files = self._create_scatterplots()
+        self.scatter_files = self._create_scatterplots(attrs)
 
         # Format the scatterplots into the main story
         return self._create_story(self.scatter_files)
@@ -44,7 +49,7 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             if os.path.exists(fn):
                 os.remove(fn)
 
-    def _create_scatterplots(self):
+    def _create_scatterplots(self, attrs):
         # Read in the observed and predicted CSV files
         obs_df = pd.read_csv(self.observed_file, index_col=self.id_field)
         prd_df = pd.read_csv(self.predicted_file, index_col=self.id_field)
@@ -55,29 +60,19 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
 
-        # Subset the attributes to those that are continuous, are accuracy
-        # attributes, are identified to go into the report, and are not
-        # species variables
-        attrs = []
-        for attr in mp.attributes:
-            if attr.field_type == 'CONTINUOUS' and \
-                    attr.is_project_attr() and \
-                    attr.is_accuracy_attr() and \
-                    not attr.is_species_attr():
-                attrs.append(attr.field_name)
-
         # Iterate over the attributes and create a scatterplot file of each
         scatter_files = []
         for attr in attrs:
+            fn = attr.field_name
 
             # Metadata for this attribute
-            metadata = mp.get_attribute(attr)
+            metadata = mp.get_attribute(fn)
 
             # Observed and predicted data matrices for this attribute
-            obs_vals, prd_vals = obs_df[attr], prd_df[attr]
+            obs_vals, prd_vals = obs_df[fn], prd_df[fn]
 
             # Create the output file name
-            output_file = attr.lower() + '_scatter.png'
+            output_file = fn.lower() + '_scatter.png'
 
             # Create the scatterplot
             mplf.draw_scatterplot(
