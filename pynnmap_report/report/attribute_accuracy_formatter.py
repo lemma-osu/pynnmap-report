@@ -6,11 +6,11 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.colors import black, yellow
 
+from pynnmap.misc import utilities
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import chart_func as cf
-from pynnmap_report.report import utilities
 
 
 def get_stylesheet():

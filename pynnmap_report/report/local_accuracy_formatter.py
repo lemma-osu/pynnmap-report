@@ -5,11 +5,11 @@ from reportlab import platypus as p
 from reportlab.lib import units as u
 
 from pynnmap.misc import mpl_figures as mplf
+from pynnmap.misc import utilities
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
-from pynnmap_report.report import utilities
 
 
 class LocalAccuracyFormatter(report_formatter.ReportFormatter):

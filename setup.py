@@ -13,8 +13,12 @@ setup(
     install_requires=[
         'click',
         'matplotlib',
+        'numpy',
+        'pandas',
+        'pynnmap',
         'reportlab',
-        'six'
+        'six',
+        'scipy'
     ],
     entry_points='''
         [pynnmap.cli_commands]
