@@ -12,19 +12,15 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class VegetationClassFormatter(report_formatter.ReportFormatter):
+    _required = ['vc_errmatrix_file', 'stand_metadata_file']
+
     def __init__(self, parameter_parser):
         super(VegetationClassFormatter, self).__init__()
         pp = parameter_parser
         self.vc_errmatrix_file = pp.vegclass_errmatrix_file
         self.stand_metadata_file = pp.stand_metadata_file
 
-        # Ensure all input files are present
-        files = [self.vc_errmatrix_file, self.stand_metadata_file]
-        try:
-            self.check_missing_files(files)
-        except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping VegetationClassFormatter\n'
-            raise e
+        self.check_missing_files()
 
     def run_formatter(self):
         # Push the vegclass error matrix into the main story

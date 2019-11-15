@@ -12,6 +12,7 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
+    _required = ['regional_accuracy_File', 'stand_metadata_file']
 
     def __init__(self, parameter_parser):
         super(RegionalAccuracyFormatter, self).__init__()
@@ -21,13 +22,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         self.id_field = pp.plot_id_field
         self.histogram_files = []
 
-        # Ensure all input files are present
-        files = [self.regional_accuracy_file, self.stand_metadata_file]
-        try:
-            self.check_missing_files(files)
-        except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping RegionalAccuracyFormatter\n'
-            raise e
+        self.check_missing_files()
 
     def run_formatter(self):
         # Create the histograms

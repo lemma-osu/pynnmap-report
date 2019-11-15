@@ -1,9 +1,10 @@
-import os
 import re
 
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
+
+from pynnmap.misc import utilities
 
 # Import the report styles
 from pynnmap_report.report import report_styles
@@ -11,6 +12,8 @@ styles = report_styles.get_report_styles()
 
 
 class ReportFormatter(object):
+    _required = []
+
     # Set up an enumeration for the different pages
     (TITLE, PORTRAIT, LANDSCAPE) = ('title', 'portrait', 'landscape')
 
@@ -80,6 +83,14 @@ class ReportFormatter(object):
 
     def run_formatter(self):
         raise NotImplementedError
+
+    def check_missing_files(self):
+        files = [getattr(self, attr) for attr in self._required]
+        try:
+            utilities.check_missing_files(files)
+        except utilities.MissingConstraintError as e:
+            e.message += '\nSkipping {}\n'.format(self.__class__.__name__)
+            raise e
 
     def clean_up(self):
         raise NotImplementedError

@@ -11,6 +11,7 @@ from pynnmap.parser import xml_report_metadata_parser as xrmp
 
 
 class IntroductionFormatter(report_formatter.ReportFormatter):
+    _required = ['report_metadata_file']
 
     # Constants
     ACRES_PER_HECTARE = 2.471
@@ -23,13 +24,7 @@ class IntroductionFormatter(report_formatter.ReportFormatter):
         self.model_type = pp.model_type
         self.model_year = pp.model_year
 
-        # Ensure all input files are present
-        files = [self.report_metadata_file]
-        try:
-            self.check_missing_files(files)
-        except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping IntroductionFormatter\n'
-            raise e
+        self.check_missing_files()
 
     def run_formatter(self):
         return self._create_story()

@@ -2,12 +2,14 @@ from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
+from pynnmap.parser import xml_stand_metadata_parser as xsmp
+
 from pynnmap_report.report import report_formatter
 from pynnmap_report.report import report_styles
-from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class DataDictionaryFormatter(report_formatter.ReportFormatter):
+    _required = ['stand_metadata_file']
 
     def __init__(self, parameter_parser):
         super(DataDictionaryFormatter, self).__init__()
@@ -15,13 +17,7 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
         self.stand_metadata_file = pp.stand_metadata_file
         self.model_type = pp.model_type
 
-        # Ensure all input files are present
-        files = [self.stand_metadata_file]
-        try:
-            self.check_missing_files(files)
-        except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping DataDictionaryFormatter\n'
-            raise e
+        self.check_missing_files()
 
     def run_formatter(self):
         return self._create_story()
@@ -30,7 +26,6 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
         pass
 
     def _create_story(self):
-
         # Set up an empty list to hold the story
         story = []
 

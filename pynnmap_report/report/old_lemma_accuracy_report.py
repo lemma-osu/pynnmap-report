@@ -1,5 +1,7 @@
 from reportlab.lib import units as u
 
+from pynnmap.misc.utilities import MissingConstraintError
+
 from pynnmap_report.report import accuracy_report
 from pynnmap_report.report import data_dictionary_formatter as ddf
 from pynnmap_report.report import introduction_formatter as intro
@@ -10,7 +12,6 @@ from pynnmap_report.report import report_styles
 from pynnmap_report.report import riemann_accuracy_formatter as riemann
 from pynnmap_report.report import species_accuracy_formatter as saf
 from pynnmap_report.report import vegetation_class_formatter as vcf
-from pynnmap_report.report.report_formatter import MissingConstraintError
 
 
 class LemmaAccuracyReport(accuracy_report.AccuracyReport):
@@ -45,12 +46,11 @@ class LemmaAccuracyReport(accuracy_report.AccuracyReport):
 
         # Add the introduction to the list of formatters if the report
         # metadata is present
-        if p.report_metadata_file:
-            try:
-                f = intro.IntroductionFormatter(self.parameter_parser)
-                formatters.append(f)
-            except MissingConstraintError as e:
-                print(e.message)
+        try:
+            f = intro.IntroductionFormatter(self.parameter_parser)
+            formatters.append(f)
+        except MissingConstraintError as e:
+            print(e.message)
 
         # Get instances of the separate components needed to build the
         # accuracy assessment report

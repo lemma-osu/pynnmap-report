@@ -3,13 +3,15 @@ from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
-from pynnmap_report.report import report_formatter
-from pynnmap_report.report import report_styles
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
+from pynnmap_report.report import report_formatter
+from pynnmap_report.report import report_styles
+
 
 class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
+    _required = ['species_accuracy_file', 'stand_metadata_file']
 
     def __init__(self, parameter_parser):
         super(SpeciesAccuracyFormatter, self).__init__()
@@ -20,13 +22,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         # Get the report metadata if it exists
         self.report_metadata_file = pp.report_metadata_file
 
-        # Ensure all input files are present
-        files = [self.species_accuracy_file, self.stand_metadata_file]
-        try:
-            self.check_missing_files(files)
-        except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping SpeciesAccuracyFormatter\n'
-            raise e
+        self.check_missing_files()
 
     def run_formatter(self):
         return self._create_story()

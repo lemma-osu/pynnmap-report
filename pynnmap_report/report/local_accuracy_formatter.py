@@ -13,6 +13,7 @@ from pynnmap_report.report import utilities
 
 
 class LocalAccuracyFormatter(report_formatter.ReportFormatter):
+    _required = ['observed_file', 'predicted_file', 'stand_metadata_file']
 
     def __init__(self, parameter_parser):
         super(LocalAccuracyFormatter, self).__init__()
@@ -23,14 +24,7 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         self.id_field = pp.plot_id_field
         self.scatter_files = []
 
-        # Ensure all input files are present
-        files = [
-            self.observed_file, self.predicted_file, self.stand_metadata_file]
-        try:
-            self.check_missing_files(files)
-        except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping LocalAccuracyFormatter\n'
-            raise e
+        self.check_missing_files()
 
     def run_formatter(self):
         # Read in the stand attribute metadata
