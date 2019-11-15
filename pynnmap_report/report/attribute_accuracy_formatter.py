@@ -1,6 +1,5 @@
 import os
 
-import pandas as pd
 from reportlab.lib.units import inch
 from reportlab.platypus import Image, PageBreak, Paragraph, Spacer, Table
 from reportlab.lib.styles import ParagraphStyle
@@ -69,6 +68,14 @@ def get_stylesheet():
     return styles
 
 
+def local_image_fn(attr):
+    return '{}.png'.format(attr.field_name.lower())
+
+
+def riemann_image_fn(attr, resolution):
+    return 'hex_{}_{}.png'.format(resolution, attr.field_name.lower())
+
+
 class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
     def __init__(self, parameter_parser):
         super(AttributeAccuracyFormatter, self).__init__()
@@ -96,14 +103,45 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
             )
 
     def run_formatter(self):
-        # Read in the stand attribute metadata
+        # Read in the stand attribute metadata and get the continuous fields
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
         attrs = utilities.get_continuous_attrs(mp)
+
+        # Create the figures
+        self.create_figures(attrs)
+
+        # Build the individual attribute pages
         flowables = []
         for attr in attrs:
             page = self.build_flowable_page(attr)
             flowables.extend(page)
         return flowables
+
+    def create_figures(self, attrs):
+        attr_fields = [a.field_name for a in attrs]
+
+        # Create the paired dataframe for the local data
+        merged_df = utilities.build_paired_dataframe_from_files(
+            self.observed_file, self.predicted_file, self.id_field,
+            attr_fields)
+
+        for attr in attrs:
+            fn = local_image_fn(attr)
+            cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=True)
+            self.image_files.append(fn)
+
+        # Create the paired dataframe for the Riemann data
+        for resolution in (10, 30, 50):
+            id_field = 'HEX_{}_ID'.format(resolution)
+            observed_file = self._get_riemann_fn(resolution, observed=True)
+            predicted_file = self._get_riemann_fn(resolution, observed=False)
+            merged_df = utilities.build_paired_dataframe_from_files(
+                observed_file, predicted_file, id_field, attr_fields)
+
+            for attr in attrs:
+                fn = riemann_image_fn(attr, resolution)
+                cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=False)
+                self.image_files.append(fn)
 
     def clean_up(self):
         for fn in self.image_files:
@@ -111,16 +149,10 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
                 os.remove(fn)
 
     def build_flowable_page(self, attr):
-        scatter_fn = self.build_scatterplot_from_data(attr, kde=True)
-        riemann_10_fn = self.build_riemann_scatterplot_from_data(attr, 10)
-        riemann_30_fn = self.build_riemann_scatterplot_from_data(attr, 30)
-        riemann_50_fn = self.build_riemann_scatterplot_from_data(attr, 50)
-
-        # Push these filenames to the image_files list so that they
-        # are deleted when report has been written
-        self.image_files.extend((
-            scatter_fn, riemann_10_fn, riemann_30_fn, riemann_50_fn
-        ))
+        scatter_fn = local_image_fn(attr)
+        riemann_10_fn = riemann_image_fn(attr, 10)
+        riemann_30_fn = riemann_image_fn(attr, 30)
+        riemann_50_fn = riemann_image_fn(attr, 50)
 
         title = attr.field_name + ' (' + attr.units + ')'
         table_style = [
@@ -157,24 +189,3 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
             ]], style=table_style, hAlign='LEFT'),
             PageBreak()
         ]
-
-    def build_scatterplot_from_data(self, attr, kde=False):
-        a = attr.field_name
-        output_fn = '{}.png'.format(a.lower())
-        obs_df = pd.read_csv(self.observed_file, usecols=(self.id_field, a))
-        prd_df = pd.read_csv(self.predicted_file, usecols=(self.id_field, a))
-        merged_df = utilities.build_paired_dataframe(obs_df, prd_df, self.id_field, a)
-        cf.draw_scatterplot(merged_df, attr, output_file=output_fn, kde=kde)
-        return output_fn
-
-    def build_riemann_scatterplot_from_data(self, attr, resolution, kde=False):
-        a = attr.field_name
-        id_field = 'HEX_{}_ID'.format(resolution)
-        output_fn = 'hex_{}_{}.png'.format(resolution, a.lower())
-        observed_file = self._get_riemann_fn(resolution, observed=True)
-        predicted_file = self._get_riemann_fn(resolution, observed=False)
-        obs_df = pd.read_csv(observed_file, usecols=(id_field, a))
-        prd_df = pd.read_csv(predicted_file, usecols=(id_field, a))
-        merged_df = utilities.build_paired_dataframe(obs_df, prd_df, id_field, a)
-        cf.draw_scatterplot(merged_df, attr, output_file=output_fn, kde=kde)
-        return output_fn
