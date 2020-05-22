@@ -101,7 +101,7 @@ class IntroductionFormatter(report_formatter.ReportFormatter):
         contacts = rmp.contacts
         contact_table = []
         contact_row = []
-        table_cols = 3
+        table_cols = min(3, len(contacts))
         for (i, contact) in enumerate(contacts):
             contact_str = '<b>' + contact.name + '</b><br/>'
             contact_str += contact.position_title + '<br/>'
