@@ -62,13 +62,15 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # Iterate over the attributes and create a histogram file of each
         histogram_files = []
         for attr in attrs:
-
             # Metadata for this attribute
             metadata = mp.get_attribute(attr)
 
             # Get the observed and predicted data for this attribute
             obs_vals = self._get_histogram_data(ae_data, attr, 'OBSERVED')
             prd_vals = self._get_histogram_data(ae_data, attr, 'PREDICTED')
+
+            if len(obs_vals) == 0:
+                continue
 
             # Set the areas for the observed and predicted data
             obs_area = obs_vals.AREA
