@@ -12,7 +12,7 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
-    _required = ['regional_accuracy_File', 'stand_metadata_file']
+    _required = ["regional_accuracy_File", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
         super(RegionalAccuracyFormatter, self).__init__()
@@ -50,8 +50,11 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # are identified to go into the report, and are not species variables
         attrs = []
         for attr in mp.attributes:
-            if attr.is_accuracy_attr() and attr.is_project_attr() and \
-                    not attr.is_species_attr():
+            if (
+                attr.is_accuracy_attr()
+                and attr.is_project_attr()
+                and not attr.is_species_attr()
+            ):
                 attrs.append(attr.field_name)
 
         # Iterate over the attributes and create a histogram file of each
@@ -62,8 +65,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             metadata = mp.get_attribute(attr)
 
             # Get the observed and predicted data for this attribute
-            obs_vals = self._get_histogram_data(ae_data, attr, 'OBSERVED')
-            prd_vals = self._get_histogram_data(ae_data, attr, 'PREDICTED')
+            obs_vals = self._get_histogram_data(ae_data, attr, "OBSERVED")
+            prd_vals = self._get_histogram_data(ae_data, attr, "PREDICTED")
 
             # Set the areas for the observed and predicted data
             obs_area = obs_vals.AREA
@@ -72,16 +75,20 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             # Set the bin names (same for both observed and predicted series)
             bin_names = obs_vals.BIN_NAME
             if not np.array_equal(bin_names.values, prd_vals.BIN_NAME.values):
-                err_msg = 'Bin names are not the same for ' + attr
+                err_msg = "Bin names are not the same for " + attr
                 raise ValueError(err_msg)
 
             # Create the output file name
-            output_file = attr.lower() + '_histogram.png'
+            output_file = attr.lower() + "_histogram.png"
 
             # Create the histogram
             mplf.draw_histogram(
-                [obs_area, prd_area], bin_names, metadata,
-                output_type=mplf.FILE, output_file=output_file)
+                [obs_area, prd_area],
+                bin_names,
+                metadata,
+                output_type=mplf.FILE,
+                output_file=output_file,
+            )
 
             # Add this to the list of histogram files
             histogram_files.append(output_file)
@@ -106,14 +113,14 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         story = self._make_page_break(story, self.PORTRAIT)
 
         # Section title
-        title_str = '<strong>Regional-Scale Accuracy Assessment:<br/> Area '
-        title_str += 'Distributions from Regional Inventory Plots vs. '
-        title_str += 'GNN</strong>'
+        title_str = "<strong>Regional-Scale Accuracy Assessment:<br/> Area "
+        title_str += "Distributions from Regional Inventory Plots vs. "
+        title_str += "GNN</strong>"
         story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.20 * u.inch))
 
         # Histogram explanation
-        histo_str = '''
+        histo_str = """
             These histograms compare the distributions of land area in
             different vegetation conditions as estimated from a regional,
             sample- (plot-) based inventory (FIA Annual Plots) to model
@@ -146,8 +153,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
             For the plots, the 'nonforest' bar represents the nonforest area
             as estimated from the FIA Annual sample.
-        '''
-        story.append(p.Paragraph(histo_str, styles['body_style']))
+        """
+        story.append(p.Paragraph(histo_str, styles["body_style"]))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Create a table of histograms and add to story

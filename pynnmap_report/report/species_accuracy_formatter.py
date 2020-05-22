@@ -11,7 +11,7 @@ from pynnmap_report.report import report_styles
 
 
 class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
-    _required = ['species_accuracy_file', 'stand_metadata_file']
+    _required = ["species_accuracy_file", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
         super(SpeciesAccuracyFormatter, self).__init__()
@@ -41,30 +41,30 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         story = self._make_page_break(story, self.PORTRAIT)
 
         # Section title
-        title_str = '<strong>Local-Scale Accuracy Assessment:<br/>'
-        title_str += 'Species Accuracy at Plot Locations'
-        title_str += '</strong>'
+        title_str = "<strong>Local-Scale Accuracy Assessment:<br/>"
+        title_str += "Species Accuracy at Plot Locations"
+        title_str += "</strong>"
         story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Kappa explanation
         kappa_str = (
-            'Cohen\'s kappa coefficient (Cohen, 1960) is a statistical '
-            'measure of reliability, accounting for agreement occurring by '
-            'chance. The equation for kappa is:'
+            "Cohen's kappa coefficient (Cohen, 1960) is a statistical "
+            "measure of reliability, accounting for agreement occurring by "
+            "chance. The equation for kappa is:"
         )
-        para = p.Paragraph(kappa_str, styles['body_style'])
+        para = p.Paragraph(kappa_str, styles["body_style"])
         story.append(para)
         story.append(p.Spacer(0, 0.05 * u.inch))
 
-        kappa_str = '''
+        kappa_str = """
            kappa = (Pr(a) - Pr(e)) / (1.0 - Pr(e))
-        '''
-        para = p.Paragraph(kappa_str, styles['indented'])
+        """
+        para = p.Paragraph(kappa_str, styles["indented"])
         story.append(para)
         story.append(p.Spacer(0, 0.05 * u.inch))
 
-        kappa_str = '''
+        kappa_str = """
             where Pr(a) is the relative observed agreement among
             raters, and Pr(e) is the probability that agreement is
             due to chance.<br/><br/>
@@ -76,8 +76,8 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             OP/PA = Observed Present / Predicted Absent
             (errors of omission)<br/>
             OA/PA = Observed Absent / Predicted Absent
-        '''
-        para = p.Paragraph(kappa_str, styles['body_style'])
+        """
+        para = p.Paragraph(kappa_str, styles["body_style"])
         story.append(para)
         story.append(p.Spacer(0, 0.2 * u.inch))
 
@@ -87,30 +87,34 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         # Header row
         header_row = []
 
-        spp_str = '<strong>Species PLANTS Code<br/>'
-        spp_str += 'Scientific Name / Common Name</strong>'
-        para = p.Paragraph(spp_str, styles['body_style_10'])
+        spp_str = "<strong>Species PLANTS Code<br/>"
+        spp_str += "Scientific Name / Common Name</strong>"
+        para = p.Paragraph(spp_str, styles["body_style_10"])
         header_row.append(para)
 
-        spp_str = '<strong>Species prevalence</strong>'
-        para = p.Paragraph(spp_str, styles['body_style_10'])
+        spp_str = "<strong>Species prevalence</strong>"
+        para = p.Paragraph(spp_str, styles["body_style_10"])
         header_row.append(para)
 
         p1 = p.Paragraph(
-            '<strong>OP/PP</strong>', styles['body_style_10_right'])
+            "<strong>OP/PP</strong>", styles["body_style_10_right"]
+        )
         p2 = p.Paragraph(
-            '<strong>OP/PA</strong>', styles['body_style_10_right'])
+            "<strong>OP/PA</strong>", styles["body_style_10_right"]
+        )
         p3 = p.Paragraph(
-            '<strong>OA/PP</strong>', styles['body_style_10_right'])
+            "<strong>OA/PP</strong>", styles["body_style_10_right"]
+        )
         p4 = p.Paragraph(
-            '<strong>OA/PA</strong>', styles['body_style_10_right'])
+            "<strong>OA/PA</strong>", styles["body_style_10_right"]
+        )
         header_cells = [[p1, p2], [p3, p4]]
         t = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-        t.setStyle(styles['default_table_style'])
+        t.setStyle(styles["default_table_style"])
         header_row.append(t)
 
-        kappa_str = '<strong>Kappa coefficient</strong>'
-        para = p.Paragraph(kappa_str, styles['body_style_10'])
+        kappa_str = "<strong>Kappa coefficient</strong>"
+        para = p.Paragraph(kappa_str, styles["body_style_10"])
         header_row.append(para)
         species_table.append(header_row)
 
@@ -129,7 +133,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         # Subset the attributes to just species
         attrs = []
         for attr in mp.attributes:
-            if attr.is_species_attr() and 'NOTALY' not in attr.field_name:
+            if attr.is_species_attr() and "NOTALY" not in attr.field_name:
                 attrs.append(attr.field_name)
 
         # Iterate over the species and print out the statistics
@@ -143,16 +147,16 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
 
                 # Strip off any suffix if it exists
                 try:
-                    spp_plain = spp.split('_')[0]
+                    spp_plain = spp.split("_")[0]
                     spp_info = rmp.get_species(spp_plain)
-                    spp_str = spp_info.spp_symbol + '<br/>'
-                    spp_str += spp_info.scientific_name + ' / '
+                    spp_str = spp_info.spp_symbol + "<br/>"
+                    spp_str += spp_info.scientific_name + " / "
                     spp_str += spp_info.common_name
                 except IndexError:
                     spp_str = spp
             else:
                 spp_str = spp
-            para = p.Paragraph(spp_str, styles['body_style_10'])
+            para = p.Paragraph(spp_str, styles["body_style_10"])
             species_row.append(para)
 
             # Get the statistical information
@@ -162,8 +166,8 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             kappa = data.KAPPA
 
             # Species prevalence
-            prevalence_str = '%.4f' % prevalence
-            para = p.Paragraph(prevalence_str, styles['body_style_10_right'])
+            prevalence_str = "%.4f" % prevalence
+            para = p.Paragraph(prevalence_str, styles["body_style_10_right"])
             species_row.append(para)
 
             # Capture the plot counts in an inner table
@@ -171,18 +175,19 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             count_row = []
             for i in range(0, 4):
                 para = p.Paragraph(
-                    '%d' % counts[i], styles['body_style_10_right'])
+                    "%d" % counts[i], styles["body_style_10_right"]
+                )
                 count_row.append(para)
                 if i % 2 == 1:
                     count_cells.append(count_row)
                     count_row = []
             t = p.Table(count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-            t.setStyle(styles['default_table_style'])
+            t.setStyle(styles["default_table_style"])
             species_row.append(t)
 
             # Print out the kappa statistic
-            kappa_str = '%.4f' % kappa
-            para = p.Paragraph(kappa_str, styles['body_style_10_right'])
+            kappa_str = "%.4f" % kappa
+            para = p.Paragraph(kappa_str, styles["body_style_10_right"])
             species_row.append(para)
 
             # Push this row to the master species table
@@ -192,40 +197,39 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         col_widths = [(x * u.inch) for x in [4.0, 0.75, 1.5, 0.75]]
         t = p.Table(species_table, colWidths=col_widths)
         t.setStyle(
-            p.TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), '#f1efe4'),
-                ('GRID', (0, 0), (-1, -1), 2, colors.white),
-
-                ('TOPPADDING', (0, 0), (0, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (0, -1), 2),
-                ('LEFTPADDING', (0, 0), (0, -1), 6),
-                ('RIGHTPADDING', (0, 0), (0, -1), 6),
-                ('ALIGNMENT', (0, 0), (0, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (0, -1), 'TOP'),
-
-                ('TOPPADDING', (1, 0), (1, -1), 2),
-                ('BOTTOMPADDING', (1, 0), (1, -1), 2),
-                ('LEFTPADDING', (1, 0), (1, -1), 6),
-                ('RIGHTPADDING', (1, 0), (1, -1), 6),
-                ('ALIGNMENT', (1, 0), (1, -1), 'RIGHT'),
-                ('VALIGN', (1, 0), (1, 0), 'TOP'),
-                ('VALIGN', (1, 1), (1, -1), 'MIDDLE'),
-
-                ('TOPPADDING', (2, 0), (2, -1), 0),
-                ('BOTTOMPADDING', (2, 0), (2, -1), 0),
-                ('LEFTPADDING', (2, 0), (2, -1), 0),
-                ('RIGHTPADDING', (2, 0), (2, -1), 0),
-                ('ALIGNMENT', (2, 0), (2, -1), 'LEFT'),
-                ('VALIGN', (2, 0), (2, -1), 'TOP'),
-
-                ('TOPPADDING', (3, 0), (3, -1), 2),
-                ('BOTTOMPADDING', (3, 0), (3, -1), 2),
-                ('LEFTPADDING', (3, 0), (3, -1), 6),
-                ('RIGHTPADDING', (3, 0), (3, -1), 6),
-                ('ALIGNMENT', (3, 0), (3, -1), 'RIGHT'),
-                ('VALIGN', (3, 0), (3, 0), 'TOP'),
-                ('VALIGN', (3, 1), (3, -1), 'MIDDLE'),
-            ]))
+            p.TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    ("GRID", (0, 0), (-1, -1), 2, colors.white),
+                    ("TOPPADDING", (0, 0), (0, -1), 2),
+                    ("BOTTOMPADDING", (0, 0), (0, -1), 2),
+                    ("LEFTPADDING", (0, 0), (0, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (0, -1), 6),
+                    ("ALIGNMENT", (0, 0), (0, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (0, -1), "TOP"),
+                    ("TOPPADDING", (1, 0), (1, -1), 2),
+                    ("BOTTOMPADDING", (1, 0), (1, -1), 2),
+                    ("LEFTPADDING", (1, 0), (1, -1), 6),
+                    ("RIGHTPADDING", (1, 0), (1, -1), 6),
+                    ("ALIGNMENT", (1, 0), (1, -1), "RIGHT"),
+                    ("VALIGN", (1, 0), (1, 0), "TOP"),
+                    ("VALIGN", (1, 1), (1, -1), "MIDDLE"),
+                    ("TOPPADDING", (2, 0), (2, -1), 0),
+                    ("BOTTOMPADDING", (2, 0), (2, -1), 0),
+                    ("LEFTPADDING", (2, 0), (2, -1), 0),
+                    ("RIGHTPADDING", (2, 0), (2, -1), 0),
+                    ("ALIGNMENT", (2, 0), (2, -1), "LEFT"),
+                    ("VALIGN", (2, 0), (2, -1), "TOP"),
+                    ("TOPPADDING", (3, 0), (3, -1), 2),
+                    ("BOTTOMPADDING", (3, 0), (3, -1), 2),
+                    ("LEFTPADDING", (3, 0), (3, -1), 6),
+                    ("RIGHTPADDING", (3, 0), (3, -1), 6),
+                    ("ALIGNMENT", (3, 0), (3, -1), "RIGHT"),
+                    ("VALIGN", (3, 0), (3, 0), "TOP"),
+                    ("VALIGN", (3, 1), (3, -1), "MIDDLE"),
+                ]
+            )
+        )
         story.append(t)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
@@ -235,7 +239,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
             the initial ordination model.  The full set of species is
             available upon request.
         """
-        para = p.Paragraph(rare_species_str, styles['body_style'])
+        para = p.Paragraph(rare_species_str, styles["body_style"])
         story.append(para)
 
         # Return this story

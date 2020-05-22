@@ -8,6 +8,7 @@ from pynnmap.misc import utilities
 
 # Import the report styles
 from pynnmap_report.report import report_styles
+
 styles = report_styles.get_report_styles()
 
 
@@ -15,7 +16,7 @@ class ReportFormatter(object):
     _required = []
 
     # Set up an enumeration for the different pages
-    (TITLE, PORTRAIT, LANDSCAPE) = ('title', 'portrait', 'landscape')
+    (TITLE, PORTRAIT, LANDSCAPE) = ("title", "portrait", "landscape")
 
     def __init__(self):
         pass
@@ -28,17 +29,20 @@ class ReportFormatter(object):
 
     @staticmethod
     def _make_title(title_str):
-        para = p.Paragraph(title_str, styles['section_style'])
+        para = p.Paragraph(title_str, styles["section_style"])
         t = p.Table([[para]], colWidths=[7.5 * u.inch])
         t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
+            p.TableStyle(
+                [
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#957348"),
+                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.black),
+                ]
+            )
+        )
         return t
 
     @staticmethod
@@ -56,26 +60,29 @@ class ReportFormatter(object):
         # Determine if there are any images left to print
         if len(row) != 0:
             for i in range(len(row), cols):
-                row.append(p.Paragraph('', styles['body_style']))
+                row.append(p.Paragraph("", styles["body_style"]))
             table.append(row)
 
         # Style this into a reportlab table and add to the story
         width = 3.75 * u.inch
         t = p.Table(table, colWidths=[width, width])
         t.setStyle(
-            p.TableStyle([
-                ('ALIGNMENT', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6.0),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6.0),
-            ]))
+            p.TableStyle(
+                [
+                    ("ALIGNMENT", (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6.0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6.0),
+                ]
+            )
+        )
         return t
 
     @staticmethod
     def txt_to_html(in_str):
         replace_list = {
-            '>': '&gt;',
-            '<': '&lt;',
+            ">": "&gt;",
+            "<": "&lt;",
         }
         for i in replace_list:
             in_str = re.sub(i, replace_list[i], in_str)
@@ -89,7 +96,7 @@ class ReportFormatter(object):
         try:
             utilities.check_missing_files(files)
         except utilities.MissingConstraintError as e:
-            e.message += '\nSkipping {}\n'.format(self.__class__.__name__)
+            e.message += "\nSkipping {}\n".format(self.__class__.__name__)
             raise e
 
     def clean_up(self):

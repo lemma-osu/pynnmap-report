@@ -12,7 +12,7 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class VegetationClassFormatter(report_formatter.ReportFormatter):
-    _required = ['vc_errmatrix_file', 'stand_metadata_file']
+    _required = ["vc_errmatrix_file", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
         super(VegetationClassFormatter, self).__init__()
@@ -44,7 +44,8 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         class RotatedParagraph(p.Paragraph):
             def wrap(self, avail_height, avail_width):
                 h, w = p.Paragraph.wrap(
-                    self, self.canv.stringWidth(self.text), self.canv._leading)
+                    self, self.canv.stringWidth(self.text), self.canv._leading
+                )
                 return w, h
 
             def draw(self):
@@ -53,36 +54,39 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
                 p.Paragraph.draw(self)
 
         # Section title
-        title_str = '<strong>Local-Scale Accuracy Assessment: '
-        title_str += 'Error Matrix for Vegetation Classes at Plot '
-        title_str += 'Locations</strong>'
+        title_str = "<strong>Local-Scale Accuracy Assessment: "
+        title_str += "Error Matrix for Vegetation Classes at Plot "
+        title_str += "Locations</strong>"
 
-        para = p.Paragraph(title_str, styles['section_style'])
+        para = p.Paragraph(title_str, styles["section_style"])
         t = p.Table([[para]], colWidths=[10.0 * u.inch])
         t.setStyle(
-            p.TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-                ('BACKGROUND', (0, 0), (-1, -1), '#957348'),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.25, colors.black),
-            ]))
+            p.TableStyle(
+                [
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#957348"),
+                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.black),
+                ]
+            )
+        )
         story.append(t)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Read in the vegclass error matrix
-        names = ['P_' + str(x) for x in range(1, 12)]
-        names.insert(0, 'OBSERVED')
-        names.extend(['TOTAL', 'CORRECT', 'FUZZY_CORRECT'])
+        names = ["P_" + str(x) for x in range(1, 12)]
+        names.insert(0, "OBSERVED")
+        names.extend(["TOTAL", "CORRECT", "FUZZY_CORRECT"])
         vc_df = pd.read_csv(self.vc_errmatrix_file, skiprows=1, names=names)
-        vc_df.drop(columns=['OBSERVED'], inplace=True)
+        vc_df.drop(columns=["OBSERVED"], inplace=True)
 
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
 
         # Get the class names from the metadata
-        vegclass_metadata = mp.get_attribute('VEGCLASS')
+        vegclass_metadata = mp.get_attribute("VEGCLASS")
         vc_codes = vegclass_metadata.codes
 
         # Create a list of lists to hold the vegclass table
@@ -91,26 +95,26 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         # Add an empty row which will be a span row for the predicted label
         header_row = []
         for i in range(2):
-            header_row.append('')
-        prd_str = '<strong>Predicted Class</strong>'
-        para = p.Paragraph(prd_str, styles['body_style_10_center'])
+            header_row.append("")
+        prd_str = "<strong>Predicted Class</strong>"
+        para = p.Paragraph(prd_str, styles["body_style_10_center"])
         header_row.append(para)
         for i in range(len(vc_df) - 1):
-            header_row.append('')
+            header_row.append("")
         vegclass_table.append(header_row)
 
         # Add the predicted labels
-        summary_labels = ('Total', '% Correct', '% FCorrect')
+        summary_labels = ("Total", "% Correct", "% FCorrect")
         header_row = []
         for i in range(2):
-            header_row.append('')
+            header_row.append("")
         for code in vc_codes:
-            label = re.sub('-', '-<br/>', code.label)
-            para = p.Paragraph(label, styles['body_style_10_right'])
+            label = re.sub("-", "-<br/>", code.label)
+            para = p.Paragraph(label, styles["body_style_10_right"])
             header_row.append(para)
         for label in summary_labels:
-            label = re.sub(' ', '<br/>', label)
-            para = p.Paragraph(label, styles['body_style_10_right'])
+            label = re.sub(" ", "<br/>", label)
+            para = p.Paragraph(label, styles["body_style_10_right"])
             header_row.append(para)
         vegclass_table.append(header_row)
 
@@ -119,8 +123,14 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         format_break = 11
 
         # Set the cells which should be blank
-        blank_cells = \
-            [(11, 12), (11, 13), (12, 11), (12, 13), (13, 11), (13, 12)]
+        blank_cells = [
+            (11, 12),
+            (11, 13),
+            (12, 11),
+            (12, 13),
+            (13, 11),
+            (13, 12),
+        ]
 
         # Add the data
         for (i, row) in enumerate(vc_df.itertuples(index=False)):
@@ -129,25 +139,24 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
 
                 # Blank cells
                 if (i, j) in blank_cells:
-                    elem_str = ''
+                    elem_str = ""
 
                 # Cells that represent plot counts
                 elif i <= format_break and j <= format_break:
-                    elem_str = '%d' % int(elem)
+                    elem_str = "%d" % int(elem)
 
                 # Cells that represent percentages
                 else:
-                    elem_str = '%.1f' % float(elem)
-                para = p.Paragraph(elem_str, styles['body_style_10_right'])
+                    elem_str = "%.1f" % float(elem)
+                para = p.Paragraph(elem_str, styles["body_style_10_right"])
                 vegclass_row.append(para)
 
             # Add the observed labels at the beginning of each data row
             if i == 0:
-                obs_str = '<strong>Observed Class</strong>'
-                para = \
-                    RotatedParagraph(obs_str, styles['body_style_10_center'])
+                obs_str = "<strong>Observed Class</strong>"
+                para = RotatedParagraph(obs_str, styles["body_style_10_center"])
             else:
-                para = ''
+                para = ""
             vegclass_row.insert(0, para)
 
             if i < len(vc_codes):
@@ -155,7 +164,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
             else:
                 index = i - len(vc_codes)
                 label = summary_labels[index]
-            para = p.Paragraph(label, styles['body_style_10_right'])
+            para = p.Paragraph(label, styles["body_style_10_right"])
             vegclass_row.insert(1, para)
 
             # Add this row to the table
@@ -172,19 +181,22 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         # Convert the vegclass table into a reportlab table
         t = p.Table(vegclass_table, colWidths=widths)
         t.setStyle(
-            p.TableStyle([
-                ('SPAN', (0, 0), (1, 1)),
-                ('SPAN', (0, 2), (0, -1)),
-                ('SPAN', (2, 0), (-1, 0)),
-                ('BACKGROUND', (0, 0), (-1, -1), '#f1efe4'),
-                ('GRID', (0, 0), (-1, -1), 1, colors.white),
-                ('ALIGNMENT', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('VALIGN', (0, 2), (0, -1), 'MIDDLE'),
-                ('VALIGN', (2, 1), (-1, 1), 'MIDDLE'),
-                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-            ]))
+            p.TableStyle(
+                [
+                    ("SPAN", (0, 0), (1, 1)),
+                    ("SPAN", (0, 2), (0, -1)),
+                    ("SPAN", (2, 0), (-1, 0)),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.white),
+                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("VALIGN", (0, 2), (0, -1), "MIDDLE"),
+                    ("VALIGN", (2, 1), (-1, 1), "MIDDLE"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ]
+            )
+        )
 
         # Set up the shading for the truly correct cells
         correct = {}
@@ -195,10 +207,17 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         for key in correct:
             val = correct[key]
             t.setStyle(
-                p.TableStyle([
-                    ('BACKGROUND', (key + 1, val + 1), (key + 1, val + 1),
-                        '#aaaaaa'),
-                ]))
+                p.TableStyle(
+                    [
+                        (
+                            "BACKGROUND",
+                            (key + 1, val + 1),
+                            (key + 1, val + 1),
+                            "#aaaaaa",
+                        ),
+                    ]
+                )
+            )
 
         # Set up the shading for the fuzzy correct cells
         fuzzy = {
@@ -218,10 +237,17 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         for key in fuzzy:
             for elem in fuzzy[key]:
                 t.setStyle(
-                    p.TableStyle([
-                        ('BACKGROUND', (key + 1, elem + 1),
-                            (key + 1, elem + 1), '#dddddd'),
-                    ]))
+                    p.TableStyle(
+                        [
+                            (
+                                "BACKGROUND",
+                                (key + 1, elem + 1),
+                                (key + 1, elem + 1),
+                                "#dddddd",
+                            ),
+                        ]
+                    )
+                )
 
         # Add this table to the story
         story.append(t)
@@ -237,17 +263,17 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
             hardwood proportion or average stand diameter, and are
             included in the percent fuzzy correct.
         """
-        para = p.Paragraph(cell_str, styles['body_style_9'])
+        para = p.Paragraph(cell_str, styles["body_style_9"])
         story.append(para)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
-        head_str = '''
+        head_str = """
             <strong>Vegetation Class (VEGCLASS) Definitions</strong> --
             CANCOV (canopy cover of all live trees), BAH_PROP (proportion of
             hardwood basal area), and QMD_DOM (quadratic mean diameter of
             all dominant and codominant trees).
-        '''
-        para = p.Paragraph(head_str, styles['body_style_9'])
+        """
+        para = p.Paragraph(head_str, styles["body_style_9"])
         story.append(para)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
@@ -255,8 +281,8 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         for code in vc_codes:
             label = code.label
             desc = self.txt_to_html(code.description)
-            doc_str = '<strong>' + label + ':</strong> ' + desc
-            para = p.Paragraph(doc_str, styles['body_style_9'])
+            doc_str = "<strong>" + label + ":</strong> " + desc
+            para = p.Paragraph(doc_str, styles["body_style_9"])
             story.append(para)
 
         return story

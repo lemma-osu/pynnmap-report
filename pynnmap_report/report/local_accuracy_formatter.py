@@ -13,7 +13,7 @@ from pynnmap_report.report import report_styles
 
 
 class LocalAccuracyFormatter(report_formatter.ReportFormatter):
-    _required = ['observed_file', 'predicted_file', 'stand_metadata_file']
+    _required = ["observed_file", "predicted_file", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
         super(LocalAccuracyFormatter, self).__init__()
@@ -66,12 +66,16 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             obs_vals, prd_vals = obs_df[fn], prd_df[fn]
 
             # Create the output file name
-            output_file = fn.lower() + '_scatter.png'
+            output_file = fn.lower() + "_scatter.png"
 
             # Create the scatterplot
             mplf.draw_scatterplot(
-                prd_vals, obs_vals, metadata, output_type=mplf.FILE,
-                output_file=output_file)
+                prd_vals,
+                obs_vals,
+                metadata,
+                output_type=mplf.FILE,
+                output_file=output_file,
+            )
 
             # Add this to the list of scatterplot files
             scatter_files.append(output_file)
@@ -90,15 +94,15 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
         story = self._make_page_break(story, self.PORTRAIT)
 
         # Section title
-        title_str = '<strong>Local-Scale Accuracy Assessment: '
-        title_str += 'Scatterplots of Observed vs. Predicted '
-        title_str += 'Values for Continuous Variables at '
-        title_str += 'Plot Locations</strong>'
+        title_str = "<strong>Local-Scale Accuracy Assessment: "
+        title_str += "Scatterplots of Observed vs. Predicted "
+        title_str += "Values for Continuous Variables at "
+        title_str += "Plot Locations</strong>"
         story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Scatter explanation
-        scatter_str = '''
+        scatter_str = """
             These scatterplots compare the observed plot values against
             predicted (modeled) values for each plot used in the GNN model.
             We use a modified leave-one-out (LOO) approach.  In traditional
@@ -121,8 +125,8 @@ class LocalAccuracyFormatter(report_formatter.ReportFormatter):
             Errors (RMSE), and coefficients of determination (R-square) are
             given. The RMSE is normalized by dividing the RMSE by the
             observed mean value.
-        '''
-        story.append(p.Paragraph(scatter_str, styles['body_style']))
+        """
+        story.append(p.Paragraph(scatter_str, styles["body_style"]))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Create a table of scatterplots and add to story

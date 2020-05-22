@@ -17,23 +17,25 @@ class LemmaAccuracyReport(accuracy_report.AccuracyReport):
         doc = BaseDocTemplate(p.accuracy_assessment_report, pagesize=letter)
 
         # Add the page template
-        doc.addPageTemplates([
-            PageTemplate(
-                frames=[
-                    Frame(
-                        0.5 * inch,
-                        0.5 * inch,
-                        7.5 * inch,
-                        10.0 * inch,
-                        leftPadding=0,
-                        bottomPadding=0,
-                        rightPadding=0,
-                        topPadding=0,
-                        id=None,
-                    ),
-                ]
-            ),
-        ])
+        doc.addPageTemplates(
+            [
+                PageTemplate(
+                    frames=[
+                        Frame(
+                            0.5 * inch,
+                            0.5 * inch,
+                            7.5 * inch,
+                            10.0 * inch,
+                            leftPadding=0,
+                            bottomPadding=0,
+                            rightPadding=0,
+                            topPadding=0,
+                            id=None,
+                        ),
+                    ]
+                ),
+            ]
+        )
 
         # Make a list of formatters which are separate subsections of the
         # report
