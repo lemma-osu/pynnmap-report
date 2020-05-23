@@ -2,19 +2,23 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
 
-from pynnmap_report.report import accuracy_report
-from pynnmap_report.report import attribute_accuracy_formatter as aa_formatter
+from pynnmap_report.report.attribute_accuracy_formatter import (
+    AttributeAccuracyFormatter,
+)
 
 
-class LemmaAccuracyReport(accuracy_report.AccuracyReport):
+class LemmaAccuracyReport:
     def __init__(self, parameter_parser):
-        super(LemmaAccuracyReport, self).__init__(parameter_parser)
+        self.parameter_parser = parameter_parser
+        self.story = []
 
     def create_accuracy_report(self):
-        p = self.parameter_parser
+        parser = self.parameter_parser
 
         # Set up the document template
-        doc = BaseDocTemplate(p.accuracy_assessment_report, pagesize=letter)
+        doc = BaseDocTemplate(
+            parser.accuracy_assessment_report, pagesize=letter
+        )
 
         # Add the page template
         doc.addPageTemplates(
@@ -23,9 +27,9 @@ class LemmaAccuracyReport(accuracy_report.AccuracyReport):
                     frames=[
                         Frame(
                             0.5 * inch,
-                            0.5 * inch,
+                            0.4 * inch,
                             7.5 * inch,
-                            10.0 * inch,
+                            10.2 * inch,
                             leftPadding=0,
                             bottomPadding=0,
                             rightPadding=0,
@@ -39,14 +43,11 @@ class LemmaAccuracyReport(accuracy_report.AccuracyReport):
 
         # Make a list of formatters which are separate subsections of the
         # report
-        formatters = []
-
-        f = aa_formatter.AttributeAccuracyFormatter(self.parameter_parser)
-        formatters.append(f)
-
-        # Run each instance's formatter
-        for f in formatters:
-            sub_story = f.run_formatter()
+        formatters = [
+            AttributeAccuracyFormatter(self.parameter_parser),
+        ]
+        for formatter in formatters:
+            sub_story = formatter.run_formatter()
             if sub_story is not None:
                 self.story.extend(sub_story[:])
                 del sub_story
@@ -55,5 +56,5 @@ class LemmaAccuracyReport(accuracy_report.AccuracyReport):
         doc.build(self.story)
 
         # Clean up if necessary for each formatter
-        for f in formatters:
-            f.clean_up()
+        for formatter in formatters:
+            formatter.clean_up()

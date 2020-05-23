@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import inch
 from reportlab.platypus import Image, PageBreak, Paragraph, Spacer, Table
 from reportlab.lib.styles import ParagraphStyle
@@ -7,10 +9,13 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.colors import black, yellow
 
 from pynnmap.misc import utilities
-from pynnmap.parser import xml_stand_metadata_parser as xsmp
+from pynnmap.parser.xml_stand_metadata_parser import (
+    Flags,
+    XMLStandMetadataParser,
+)
 
-from pynnmap_report.report import report_formatter
 from pynnmap_report.report import chart_func as cf
+from pynnmap_report.report.report_formatter import ReportFormatter
 
 
 def get_stylesheet():
@@ -60,6 +65,13 @@ def get_stylesheet():
         fontSize=14,
     )
 
+    styles["subheading"] = ParagraphStyle(
+        "subheading",
+        parent=styles["default"],
+        fontSize=10,
+        alignment=TA_CENTER,
+    )
+
     styles["alert"] = ParagraphStyle(
         "alert", parent=styles["default"], textColor=yellow
     )
@@ -67,40 +79,113 @@ def get_stylesheet():
 
 
 def local_image_fn(attr):
+    """File name for local accuracy scatterplot image"""
     return "{}.png".format(attr.field_name.lower())
 
 
+def create_local_figures(df, attrs):
+    """
+    Given a set of attributes and a dataframe of predicted and observed
+    values, create a set of scatterplots and return the list of filenames
+    """
+    files = []
+    for attr in attrs:
+        fn = local_image_fn(attr)
+        cf.draw_scatterplot(df, attr, output_file=fn, kde=True)
+        files.append(fn)
+    return files
+
+
+def regional_image_fn(attr):
+    """File name for regional accuracy histogram image"""
+    return "{}_area.png".format(attr.field_name.lower())
+
+
+def create_regional_figures(area_df, olofsson_df, attrs):
+    """
+    Given a set of attributes and a dataframe of predicted and observed
+    area values, create a set of histograms and return the list of filenames
+    """
+    files = []
+    for attr in attrs:
+        fn = regional_image_fn(attr)
+        cf.draw_histogram(area_df, olofsson_df, attr, output_file=fn)
+        files.append(fn)
+    return files
+
+
 def riemann_image_fn(attr, resolution):
+    """File name for Riemann mid-scale accuracy image based on resolution"""
     return "hex_{}_{}.png".format(resolution, attr.field_name.lower())
 
 
-class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
+def get_riemann_fn(riemann_dir, resolution, k=7, observed=True):
+    """File name for Riemann observed/predicted files"""
+    if observed:
+        return "{root}/hex_{res}/hex_{res}_observed_mean.csv".format(
+            root=riemann_dir, res=resolution
+        )
+    return "{root}/hex_{res}/hex_{res}_predicted_k{k}_mean.csv".format(
+        root=riemann_dir, res=resolution, k=k
+    )
+
+
+def create_riemann_figures(riemann_dir, k, attrs):
+    """
+    Given a set of attributes, create a set of scatterplots across all
+    Riemann resolutions and return the list of filenames
+    """
+    files = []
+    attr_fields = [a.field_name for a in attrs]
+    for resolution in (10, 30, 50):
+        id_field = "HEX_{}_ID".format(resolution)
+        observed_file = get_riemann_fn(riemann_dir, resolution, observed=True)
+        predicted_file = get_riemann_fn(
+            riemann_dir, resolution, k=k, observed=False
+        )
+        merged_df = utilities.build_paired_dataframe_from_files(
+            observed_file, predicted_file, id_field, attr_fields
+        )
+        for attr in attrs:
+            fn = riemann_image_fn(attr, resolution)
+            cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=False)
+            files.append(fn)
+    return files
+
+
+class AttributeAccuracyFormatter(ReportFormatter):
+    """
+    Formatter for a continuous attribute which creates local, regional,
+    and mid-scale graphics for inclusion into a single page
+    """
+
     def __init__(self, parameter_parser):
-        super(AttributeAccuracyFormatter, self).__init__()
-        pp = parameter_parser
-        self.stand_metadata_file = pp.stand_metadata_file
-        self.observed_file = pp.stand_attribute_file
-        self.predicted_file = pp.independent_predicted_file
-        self.id_field = pp.plot_id_field
+        super().__init__()
+        self.stand_metadata_file = parameter_parser.stand_metadata_file
+        self.observed_file = parameter_parser.stand_attribute_file
+        self.predicted_file = parameter_parser.independent_predicted_file
+        self.id_field = parameter_parser.plot_id_field
         self.stylesheet = get_stylesheet()
-        self.riemann_dir = pp.riemann_output_folder
-        self.k = pp.k
+        self.riemann_dir = parameter_parser.riemann_output_folder
+        self.k = parameter_parser.k
         self.image_files = []
 
-    def _get_riemann_fn(self, resolution, observed=True):
-        if observed:
-            return "{root}/hex_{res}/hex_{res}_observed_mean.csv".format(
-                root=self.riemann_dir, res=resolution
-            )
-        else:
-            return "{root}/hex_{res}/hex_{res}_predicted_k{k}_mean.csv".format(
-                root=self.riemann_dir, res=resolution, k=self.k
-            )
+        self.error_matrix_df = pd.read_csv(
+            parameter_parser.error_matrix_accuracy_file
+        )
+        self.bins_df = pd.read_csv(parameter_parser.error_matrix_bin_file)
+        self.area_df = pd.read_csv(parameter_parser.regional_accuracy_file)
+        self.olofsson_df = pd.read_csv(parameter_parser.regional_olofsson_file)
 
     def run_formatter(self):
         # Read in the stand attribute metadata and get the continuous fields
-        mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
-        attrs = utilities.get_continuous_attrs(mp)
+        metadata_parser = XMLStandMetadataParser(self.stand_metadata_file)
+        attrs = metadata_parser.filter(
+            Flags.CONTINUOUS
+            | Flags.ACCURACY
+            | Flags.PROJECT
+            | Flags.NOT_SPECIES
+        )
 
         # Create the figures
         self.create_figures(attrs)
@@ -120,24 +205,19 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
             self.observed_file, self.predicted_file, self.id_field, attr_fields
         )
 
-        for attr in attrs:
-            fn = local_image_fn(attr)
-            cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=True)
-            self.image_files.append(fn)
+        # Create the figures
+        local_figures = create_local_figures(merged_df, attrs)
+        self.image_files.extend(local_figures)
 
-        # Create the paired dataframe for the Riemann data
-        for resolution in (10, 30, 50):
-            id_field = "HEX_{}_ID".format(resolution)
-            observed_file = self._get_riemann_fn(resolution, observed=True)
-            predicted_file = self._get_riemann_fn(resolution, observed=False)
-            merged_df = utilities.build_paired_dataframe_from_files(
-                observed_file, predicted_file, id_field, attr_fields
-            )
+        regional_figures = create_regional_figures(
+            self.area_df, self.olofsson_df, attrs
+        )
+        self.image_files.extend(regional_figures)
 
-            for attr in attrs:
-                fn = riemann_image_fn(attr, resolution)
-                cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=False)
-                self.image_files.append(fn)
+        riemann_figures = create_riemann_figures(
+            self.riemann_dir, self.k, attrs
+        )
+        self.image_files.extend(riemann_figures)
 
     def clean_up(self):
         for fn in self.image_files:
@@ -145,7 +225,12 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
                 os.remove(fn)
 
     def build_flowable_page(self, attr):
+        """
+        Create a single page of accuracy assessment graphics
+        """
+        # Get the image files
         scatter_fn = local_image_fn(attr)
+        regional_fn = regional_image_fn(attr)
         riemann_10_fn = riemann_image_fn(attr, 10)
         riemann_30_fn = riemann_image_fn(attr, 30)
         riemann_50_fn = riemann_image_fn(attr, 50)
@@ -156,8 +241,10 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
             ("TOPPADDING", (0, 0), (-1, -1), 0),
             ("RIGHTPADDING", (-1, -1), (-1, -1), 0),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
         ]
         default_style = self.stylesheet["default"]
+        subheading_style = self.stylesheet["subheading"]
         title_style = self.stylesheet["title"]
 
         return [
@@ -180,7 +267,7 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
             Spacer(1, 0.10 * inch),
             Paragraph("Regional Accuracy", default_style),
             Spacer(1, 0.17 * inch),
-            Image("./histo.png", width=7.5 * inch, height=2.5 * inch),
+            Image(regional_fn, width=7.5 * inch, height=2.5 * inch),
             Spacer(1, 0.10 * inch),
             Paragraph("Accuracy Across Scales", default_style),
             Spacer(1, 0.17 * inch),
@@ -196,7 +283,17 @@ class AttributeAccuracyFormatter(report_formatter.ReportFormatter):
                         Image(
                             riemann_50_fn, width=2.4 * inch, height=2.4 * inch
                         ),
-                    ]
+                    ],
+                    [
+                        Spacer(1, 0.05 * inch),
+                        Spacer(1, 0.05 * inch),
+                        Spacer(1, 0.05 * inch),
+                    ],
+                    [
+                        Paragraph("8,660 ha hexagons", subheading_style),
+                        Paragraph("78,100 ha hexagons", subheading_style),
+                        Paragraph("216,5000 ha hexagons", subheading_style),
+                    ],
                 ],
                 style=table_style,
                 hAlign="LEFT",
