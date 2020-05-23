@@ -1,14 +1,22 @@
 import os
 
+import numpy as np
 import pandas as pd
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.colors import black, yellow, white
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
 from reportlab.lib.units import inch
-from reportlab.platypus import Image, PageBreak, Paragraph, Spacer, Table
+from reportlab.platypus import (
+    Image,
+    PageBreak,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_LEFT
-from reportlab.lib.colors import black, yellow
 
 from pynnmap.misc import utilities
+from pynnmap.misc.classification_accuracy import Classifier, Classification
 from pynnmap.parser.xml_stand_metadata_parser import (
     Flags,
     XMLStandMetadataParser,
@@ -75,6 +83,25 @@ def get_stylesheet():
     styles["alert"] = ParagraphStyle(
         "alert", parent=styles["default"], textColor=yellow
     )
+
+    styles["error_matrix"] = ParagraphStyle(
+        "error_matrix",
+        parent=styles["default"],
+        fontSize=7,
+        leading=7,
+        alignment=TA_RIGHT,
+    )
+
+    styles["error_matrix_center"] = ParagraphStyle(
+        "error_matrix_center",
+        parent=styles["error_matrix"],
+        alignment=TA_CENTER,
+    )
+
+    styles["error_matrix_rot"] = ParagraphStyle(
+        "error_matrix_rot", parent=styles["error_matrix"], alignment=TA_LEFT,
+    )
+
     return styles
 
 
@@ -219,6 +246,230 @@ class AttributeAccuracyFormatter(ReportFormatter):
         )
         self.image_files.extend(riemann_figures)
 
+    def build_error_matrix(self, attr):
+        """
+        Build a binned error matrix from continuous data
+        """
+        fn = attr.field_name
+
+        # Get the subsets of the dataframes associated with this attribute
+        em_data = self.error_matrix_df[self.error_matrix_df.VARIABLE == fn]
+        bins = self.bins_df[self.bins_df.VARIABLE == fn]
+
+        # Construct the error matrix and get row/column totals
+        cats = np.arange(1, len(bins) + 1)
+        obs = pd.Categorical(em_data.OBSERVED_CLASS, categories=cats)
+        prd = pd.Categorical(em_data.PREDICTED_CLASS, categories=cats)
+        err_matrix = pd.crosstab(
+            index=obs,
+            columns=prd,
+            values=np.array(em_data.COUNT),
+            aggfunc=sum,
+            margins=True,
+            dropna=False,
+        ).values
+
+        # Create a new buffered array to accommodate labels and accuracy and
+        # copy in the calculated error matrix
+        n_cells, _ = err_matrix.shape
+        arr = np.empty((n_cells + 4, n_cells + 4), dtype=np.object)
+        arr[:] = ""
+
+        # Label the axes
+        arr[2, 0] = "Observed class"
+        arr[0, 2] = "Predicted class"
+
+        # Assign class labels
+        def get_labels(bin_df):
+            def exp_range(low, high):
+                def _exp(x):
+                    base, exponent = "{:.1e}".format(x).split("e")
+                    return "{:.1f}e{:d}".format(float(base), int(exponent))
+
+                return "{}-{}".format(_exp(low), _exp(high))
+
+            def reg_range(low, high):
+                def _reg(x):
+                    return "{:.1f}".format(x)
+
+                return "{}-{}".format(_reg(low), _reg(high))
+
+            func = exp_range if bin_df.HIGH.max() > 1000.0 else reg_range
+            return [
+                func(low, high) for low, high in zip(bin_df.LOW, bin_df.HIGH)
+            ]
+
+        bin_labels = np.array(
+            get_labels(bins) + ["Total", "% correct", "% fuzzy correct"]
+        )
+        arr[1, 2:] = bin_labels
+        arr[2:, 1] = bin_labels.transpose()
+
+        # Fill in the error matrix cells
+        arr[2:-2, 2:-2] = err_matrix
+
+        # Calculate row/column/total percent correct
+        diag = np.diag(err_matrix)[:-1]
+        row_sums, col_sums = err_matrix[-1, :-1], err_matrix[:-1, -1]
+        out = np.zeros_like(diag, dtype=np.float)
+        pct_r = np.divide(diag, row_sums, out=out, where=row_sums != 0)
+        out = np.zeros_like(diag, dtype=np.float)
+        pct_c = np.divide(diag, col_sums, out=out, where=col_sums != 0)
+        arr[-2, 2 : n_cells + 1] = pct_r * 100.0
+        arr[2 : n_cells + 1, -2] = pct_c * 100.0
+        arr[-2, -2] = diag.sum() / row_sums.sum() * 100.0
+
+        # Calculate row/column/total percent fuzzy correct
+        classifiers = {}
+        for i in range(len(diag)):
+            if i == 0:
+                classification = Classification(i, f"{i}", [i, i + 1])
+            elif i == len(diag) - 1:
+                classification = Classification(i, f"{i}", [i - 1, i])
+            else:
+                classification = Classification(i, f"{i}", [i - 1, i, i + 1])
+            classifiers[i] = classification
+        clf = Classifier(classifiers)
+        incorrect = 0
+        em_data = err_matrix[:-1, :-1]
+        em_size, _ = em_data.shape
+        r_totals = em_data.sum(axis=1).astype(np.float64)
+        c_totals = em_data.sum(axis=0).astype(np.float64)
+        total = em_data.sum()
+        r_correct = np.zeros_like(r_totals)
+        c_correct = np.zeros_like(c_totals)
+        for i in range(len(diag)):
+            f_classes = clf.fuzzy_classification(i)
+            r_correct[i] = em_data[i, f_classes].sum()
+            c_correct[i] = em_data[f_classes, i].sum()
+            incorrect += r_totals[i] - r_correct[i]
+
+        def calc_percent(num, denom):
+            with np.errstate(divide="ignore", invalid="ignore"):
+                return np.where(denom, num / denom * 100.0, 0.0)
+
+        arr[-1, 2 : em_size + 2] = calc_percent(c_correct, c_totals)
+        arr[2 : em_size + 2, -1] = calc_percent(r_correct, r_totals)
+        arr[-1, -1] = calc_percent(total - incorrect, total)
+
+        # At this point, the correct elements are in the error matrix, but
+        # they have not yet been formatted.
+        # TODO: Separate into functions
+
+        # Style for error matrix
+        em_style = self.stylesheet["error_matrix"]
+        em_rot_style = self.stylesheet["error_matrix_rot"]
+        em_style_center = self.stylesheet["error_matrix_center"]
+
+        # Change column labels to rotated paragraphs
+        # Rotate the column labels
+        class RotatedParagraph(Paragraph):
+            """Rotated platypus paragraph"""
+
+            def wrap(self, _dummy_width, _dummy_height):
+                new_width = self.canv.stringWidth(self.text) + 0.1 * inch
+                height, width = Paragraph.wrap(
+                    self,
+                    new_width,
+                    self.canv._leading,  # pylint: disable=protected-access
+                )
+                return width, height
+
+            def draw(self):
+                self.canv.rotate(90)
+                self.canv.translate(0.0, -10.0)
+                Paragraph.draw(self)
+
+        def rotated_label(x, style):
+            return RotatedParagraph(x, style)
+
+        rotated_labels = np.vectorize(rotated_label, excluded=["style"])
+        arr[1, 2:] = rotated_labels(arr[1, 2:], em_rot_style)
+        arr[2, 0] = rotated_label(arr[2, 0], em_rot_style)
+
+        # For all others, just turn into paragraphs based on type
+        def to_paragraph(x, style):
+            try:
+                return Paragraph("{:d}".format(x), style)
+            except ValueError:
+                try:
+                    return Paragraph("{:.1f}".format(x), style)
+                except ValueError:
+                    return Paragraph("{}".format(x), style)
+
+        paragraph_cells = np.vectorize(to_paragraph, excluded=["style"])
+        arr[2:, 1:] = paragraph_cells(arr[2:, 1:], em_style)
+        arr[0, 2] = to_paragraph(arr[0, 2], em_style_center)
+
+        def format_table(data):
+            n_rows, n_cols = data.shape
+
+            total_width = 4.10 * inch
+            obs_label = 0.25 * inch
+            horiz_labels = 0.80 * inch
+            percent_labels = 0.35 * inch
+            available = total_width - (
+                obs_label + horiz_labels + 2 * percent_labels
+            )
+            standard = available / (n_cols - 4)
+            widths = (
+                [obs_label]
+                + [horiz_labels]
+                + [standard] * (n_cols - 5)
+                + [percent_labels] * 2
+            )
+
+            total_height = 3.2 * inch
+            prd_label = 0.25 * inch
+            vert_labels = 0.8 * inch
+            available = total_height - (prd_label + vert_labels)
+            standard = available / (n_rows - 2)
+            heights = [prd_label] + [vert_labels] + [standard] * (n_rows - 2)
+
+            return Table(data.tolist(), colWidths=widths, rowHeights=heights)
+
+        table = format_table(arr)
+        table.setStyle(
+            TableStyle(
+                [
+                    ("SPAN", (0, 0), (1, 1)),
+                    ("SPAN", (0, 2), (0, -1)),
+                    ("SPAN", (2, 0), (-1, 0)),
+                    ("BACKGROUND", (0, 0), (-1, -1), white),
+                    ("GRID", (0, 0), (-1, -1), 1, "#cccccc"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 2),
+                    ("FONTSIZE", (0, 0), (-1, -1), 7),
+                    ("BOX", (0, 0), (-1, -1), 1.25, black),
+                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                    ("ALIGNMENT", (1, 0), (-1, 0), "CENTER"),
+                    ("ALIGNMENT", (2, 1), (-1, 1), "CENTER"),
+                    ("VALIGN", (0, 2), (-1, -1), "CENTER"),
+                    ("VALIGN", (2, 1), (-1, 1), "BOTTOM"),
+                    ("BOTTOMPADDING", (0, 1), (-1, -1), 2),
+                    ("BOTTOMPADDING", (0, 0), (-1, 1), 4),
+                ]
+            )
+        )
+
+        # Shading on correct cells
+        for i in range(2, len(diag) + 2):
+            table.setStyle(
+                TableStyle([("BACKGROUND", (i, i), (i, i), "#aaaaaa")])
+            )
+
+        # Shading on fuzzy correct cells
+        for i in range(2, len(diag) + 1):
+            table.setStyle(
+                TableStyle([("BACKGROUND", (i, i + 1), (i, i + 1), "#dddddd")])
+            )
+            table.setStyle(
+                TableStyle([("BACKGROUND", (i + 1, i), (i + 1, i), "#dddddd")])
+            )
+
+        return table
+
     def clean_up(self):
         for fn in self.image_files:
             if os.path.exists(fn):
@@ -228,6 +479,9 @@ class AttributeAccuracyFormatter(ReportFormatter):
         """
         Create a single page of accuracy assessment graphics
         """
+        # Build the error matrix for this attribute
+        error_matrix = self.build_error_matrix(attr)
+
         # Get the image files
         scatter_fn = local_image_fn(attr)
         regional_fn = regional_image_fn(attr)
@@ -258,7 +512,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
                 [
                     [
                         Image(scatter_fn, width=3.2 * inch, height=3.2 * inch),
-                        Image(scatter_fn, width=3.2 * inch, height=3.2 * inch),
+                        error_matrix,
                     ]
                 ],
                 style=table_style,
