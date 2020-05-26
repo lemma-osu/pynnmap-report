@@ -1,9 +1,10 @@
 from reportlab import platypus as p
 from reportlab import rl_config
-from reportlab.lib import styles, enums, fonts, pagesizes, colors
-from reportlab.lib import units as u
+from reportlab.lib import colors, enums, fonts, pagesizes, units as u
+
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfgen import canvas
 
 
@@ -29,7 +30,7 @@ def get_report_styles():
 
     lead_multiplier = 1.20
 
-    body_style = styles.ParagraphStyle(
+    body_style = ParagraphStyle(
         name="Normal",
         fontName="Garamond",
         fontSize=11.5,
@@ -38,17 +39,17 @@ def get_report_styles():
     )
     report_styles["body_style"] = body_style
 
-    body_style_right = styles.ParagraphStyle(
+    body_style_right = ParagraphStyle(
         name="BodyRight", parent=body_style, alignment=enums.TA_RIGHT,
     )
     report_styles["body_style_right"] = body_style_right
 
-    body_style_center = styles.ParagraphStyle(
+    body_style_center = ParagraphStyle(
         name="BodyCenter", parent=body_style, alignment=enums.TA_CENTER,
     )
     report_styles["body_style_center"] = body_style_center
 
-    body_style_10 = styles.ParagraphStyle(
+    body_style_10 = ParagraphStyle(
         name="BodySmall",
         parent=body_style,
         fontSize=10,
@@ -56,7 +57,7 @@ def get_report_styles():
     )
     report_styles["body_style_10"] = body_style_10
 
-    body_style_9 = styles.ParagraphStyle(
+    body_style_9 = ParagraphStyle(
         name="Body9",
         parent=body_style,
         fontSize=9,
@@ -64,39 +65,39 @@ def get_report_styles():
     )
     report_styles["body_style_9"] = body_style_9
 
-    body_style_10_right = styles.ParagraphStyle(
+    body_style_10_right = ParagraphStyle(
         name="BodySmallRight", parent=body_style_10, alignment=enums.TA_RIGHT,
     )
     report_styles["body_style_10_right"] = body_style_10_right
 
-    body_style_10_center = styles.ParagraphStyle(
+    body_style_10_center = ParagraphStyle(
         name="BodySmallCenter", parent=body_style_10, alignment=enums.TA_CENTER,
     )
     report_styles["body_style_10_center"] = body_style_10_center
 
-    indented = styles.ParagraphStyle(
+    indented = ParagraphStyle(
         name="Indented", parent=body_style, leftIndent=24,
     )
     report_styles["indented"] = indented
 
-    contact_style = styles.ParagraphStyle(
+    contact_style = ParagraphStyle(
         name="Contact", parent=body_style, fontSize=10,
     )
     report_styles["contact_style"] = contact_style
 
-    contact_style_right = styles.ParagraphStyle(
+    contact_style_right = ParagraphStyle(
         name="ContactRight", parent=contact_style, alignment=enums.TA_RIGHT,
     )
     report_styles["contact_style_right"] = contact_style_right
 
-    contact_style_right_bold = styles.ParagraphStyle(
+    contact_style_right_bold = ParagraphStyle(
         name="ContactRightBold",
         parent=contact_style_right,
         fontName="Garamond-Bold",
     )
     report_styles["contact_style_right_bold"] = contact_style_right_bold
 
-    heading_style = styles.ParagraphStyle(
+    heading_style = ParagraphStyle(
         name="Heading",
         parent=body_style,
         fontName="Garamond-Bold",
@@ -105,17 +106,17 @@ def get_report_styles():
     )
     report_styles["heading_style"] = heading_style
 
-    code_style = styles.ParagraphStyle(
+    code_style = ParagraphStyle(
         name="Code", parent=body_style, fontSize=7, leading=7 * lead_multiplier,
     )
     report_styles["code_style"] = code_style
 
-    code_style_right = styles.ParagraphStyle(
+    code_style_right = ParagraphStyle(
         name="CodeRight", parent=code_style, alignment=enums.TA_RIGHT,
     )
     report_styles["code_style_right"] = code_style_right
 
-    title_style = styles.ParagraphStyle(
+    title_style = ParagraphStyle(
         name="Title",
         parent=body_style,
         fontName="Garamond-Bold",
@@ -125,7 +126,7 @@ def get_report_styles():
     )
     report_styles["title_style"] = title_style
 
-    sub_title_style = styles.ParagraphStyle(
+    sub_title_style = ParagraphStyle(
         name="Subtitle",
         parent=title_style,
         fontName="Garamond",
@@ -134,7 +135,7 @@ def get_report_styles():
     )
     report_styles["sub_title_style"] = sub_title_style
 
-    section_style = styles.ParagraphStyle(
+    section_style = ParagraphStyle(
         name="Section",
         parent=title_style,
         alignment=enums.TA_CENTER,
@@ -156,35 +157,35 @@ def get_report_styles():
     return report_styles
 
 
-def _do_nothing(_, doc):
+def _do_nothing(_canvas, _doc):
     pass
 
 
-def _set_portrait_background(cnv):
-    cnv.setStrokeColor(colors.black)
-    cnv.setLineWidth(1)
-    cnv.setFillColor("#e6ded5")
-    cnv.roundRect(
+def _set_background(canvas_, portrait_):
+    canvas_.setStrokeColor(colors.black)
+    canvas_.setLineWidth(1)
+    canvas_.setFillColor("#e6ded5")
+    width = 7.5 * u.inch if portrait_ else 10.0 * u.inch
+    height = 10.0 * u.inch if portrait_ else 7.5 * u.inch
+    canvas_.roundRect(
         0.5 * u.inch,
         0.5 * u.inch,
-        7.5 * u.inch,
-        10.0 * u.inch,
+        width,
+        height,
         0.15 * u.inch,
         stroke=1,
         fill=1,
     )
 
 
-def title(cnv, doc):
-    cnv.saveState()
-    _set_portrait_background(cnv)
-
-    # Draw banner image
+def title(canvas_, _doc):
+    canvas_.saveState()
+    _set_background(canvas_, portrait_=True)
     lemma_img = (
         "L:/resources/code/models/accuracy_assessment/report/images/"
         "lemma_logo.gif"
     )
-    cnv.drawImage(
+    canvas_.drawImage(
         lemma_img,
         0.5 * u.inch,
         7.5 * u.inch,
@@ -192,100 +193,74 @@ def title(cnv, doc):
         height=3 * u.inch,
         mask="auto",
     )
-
-    cnv.restoreState()
-
-
-def portrait(cnv, doc):
-    cnv.saveState()
-    _set_portrait_background(cnv)
-    cnv.restoreState()
+    canvas_.restoreState()
 
 
-def landscape(cnv, doc):
-    cnv.saveState()
+def portrait(canvas_, _doc):
+    canvas_.saveState()
+    _set_background(canvas_, portrait_=True)
+    canvas_.restoreState()
 
-    # Page background
-    cnv.setStrokeColor(colors.black)
-    cnv.setLineWidth(1)
-    cnv.setFillColor("#e6ded5")
-    cnv.roundRect(
-        0.5 * u.inch,
-        0.5 * u.inch,
-        10.0 * u.inch,
-        7.5 * u.inch,
-        0.15 * u.inch,
-        stroke=1,
-        fill=1,
-    )
-    cnv.restoreState()
+
+def landscape(canvas_, _doc):
+    canvas_.saveState()
+    _set_background(canvas_, portrait_=False)
+    canvas_.restoreState()
 
 
 class GnnDocTemplate(p.BaseDocTemplate):
     def __init__(self, fn, **kwargs):
-        super(GnnDocTemplate, self).__init__(fn, **kwargs)
+        super().__init__(fn, **kwargs)
         self.pagesize = [8.5 * u.inch, 11.0 * u.inch]
 
+        self.on_title = kwargs.get("on_title", _do_nothing)
+        self.on_portrait = kwargs.get("on_portrait", _do_nothing)
+        self.on_landscape = kwargs.get("on_landscape", _do_nothing)
+
     def build(
-        self,
-        flowables,
-        onTitle=_do_nothing,
-        onPortrait=_do_nothing,
-        onLandscape=_do_nothing,
-        canvasmaker=canvas.Canvas,
+        self, flowables, filename, canvasmaker=canvas.Canvas,
     ):
 
         # Recalculate in case we changed margins, sizes, etc
         self._calc()
 
-        # Portrait frame
         frame_portrait = p.Frame(
-            self.leftMargin,
-            self.bottomMargin,
-            self.width,
-            self.height,
-            id="portraitFrame",
+            0.75 * u.inch,
+            0.60 * u.inch,
+            7.00 * u.inch,
+            9.80 * u.inch,
+            id="portrait_frame",
         )
 
-        # Landscape frame
         frame_landscape = p.Frame(
             0.75 * u.inch,
-            0.5 * u.inch,
-            9.5 * u.inch,
-            7.4 * u.inch,
-            id="landscapeFrame",
+            0.50 * u.inch,
+            9.50 * u.inch,
+            7.40 * u.inch,
+            id="landscape_frame",
         )
 
-        # Add page templates to this document template
         self.addPageTemplates(
             [
                 p.PageTemplate(
                     id="title",
                     frames=frame_portrait,
-                    onPage=onTitle,
+                    onPage=self.on_title,
                     pagesize=pagesizes.portrait(pagesizes.letter),
                 ),
                 p.PageTemplate(
                     id="portrait",
                     frames=frame_portrait,
-                    onPage=onPortrait,
+                    onPage=self.on_portrait,
                     pagesize=pagesizes.portrait(pagesizes.letter),
                 ),
                 p.PageTemplate(
                     id="landscape",
                     frames=frame_landscape,
-                    onPage=onLandscape,
+                    onPage=self.on_landscape,
                     pagesize=pagesizes.landscape(pagesizes.letter),
                 ),
             ]
         )
 
-        if onTitle is _do_nothing and hasattr(self, "onTitle"):
-            self.pageTemplates[0].beforeDrawPage = self.onTitle
-        if onPortrait is _do_nothing and hasattr(self, "onPortrait"):
-            self.pageTemplates[1].beforeDrawPage = self.onPortrait
-        if onLandscape is _do_nothing and hasattr(self, "onLandscape"):
-            self.pageTemplates[2].beforeDrawPage = self.onLandscape
-
-        # Use the base class to call build
-        p.BaseDocTemplate.build(self, flowables, canvasmaker=canvasmaker)
+        super().build(flowables, filename=filename, canvasmaker=canvasmaker)
