@@ -1,22 +1,24 @@
+"""
+Formatter to add citations to report
+"""
 from reportlab import platypus as p
 from reportlab.lib import units as u
 
-from pynnmap_report.report import report_formatter
-from pynnmap_report.report import report_styles
+from . import report_formatter
+from . import report_styles
+from .report_formatter import page_break, make_title
 
 
 class ReferencesFormatter(report_formatter.ReportFormatter):
+    """
+    Formatter to add citations to report
+    """
+
     def __init__(self):
         super(ReferencesFormatter, self).__init__()
 
     def run_formatter(self):
-        return self._create_story()
-
-    def clean_up(self):
-        pass
-
-    def _create_story(self):
-
+        """Run the formatter"""
         # Set up an empty list to hold the story
         story = []
 
@@ -24,11 +26,10 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
         styles = report_styles.get_report_styles()
 
         # Create a page break
-        story = self._make_page_break(story, self.PORTRAIT)
+        story.extend(page_break(self.PORTRAIT))
 
         # Section title
-        title_str = "<strong>References</strong>"
-        story.append(self._make_title(title_str))
+        story.append(make_title("<strong>References</strong>"))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # List of references used
@@ -69,3 +70,6 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
 
         # Return this story
         return story
+
+    def clean_up(self):
+        pass

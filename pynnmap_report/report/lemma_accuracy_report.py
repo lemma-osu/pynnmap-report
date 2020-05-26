@@ -8,6 +8,7 @@ from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
 from .introduction_formatter import IntroductionFormatter
 from .attribute_accuracy_formatter import AttributeAccuracyFormatter
 from .data_dictionary_formatter import DataDictionaryFormatter
+from .references_formatter import ReferencesFormatter
 
 
 class LemmaAccuracyReport:
@@ -58,6 +59,7 @@ class LemmaAccuracyReport:
             IntroductionFormatter(self.parameter_parser),
             AttributeAccuracyFormatter(self.parameter_parser),
             DataDictionaryFormatter(self.parameter_parser),
+            ReferencesFormatter(),
         ]
         for formatter in formatters:
             sub_story = formatter.run_formatter()
