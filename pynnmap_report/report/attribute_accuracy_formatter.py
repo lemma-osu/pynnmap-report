@@ -23,7 +23,7 @@ from pynnmap.parser.xml_stand_metadata_parser import (
 )
 
 from pynnmap_report.report import chart_func as cf
-from pynnmap_report.report.report_formatter import ReportFormatter
+from pynnmap_report.report.report_formatter import ReportFormatter, page_break
 
 
 def get_stylesheet():
@@ -219,6 +219,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
 
         # Build the individual attribute pages
         flowables = []
+        flowables.extend(page_break(self.PORTRAIT))
         for attr in attrs:
             page = self.build_flowable_page(attr)
             flowables.extend(page)

@@ -2,6 +2,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
 
+from pynnmap_report.report.introduction_formatter import IntroductionFormatter
 from pynnmap_report.report.attribute_accuracy_formatter import (
     AttributeAccuracyFormatter,
 )
@@ -24,6 +25,7 @@ class LemmaAccuracyReport:
         doc.addPageTemplates(
             [
                 PageTemplate(
+                    id="portrait",
                     frames=[
                         Frame(
                             0.5 * inch,
@@ -44,6 +46,7 @@ class LemmaAccuracyReport:
         # Make a list of formatters which are separate subsections of the
         # report
         formatters = [
+            IntroductionFormatter(self.parameter_parser),
             AttributeAccuracyFormatter(self.parameter_parser),
         ]
         for formatter in formatters:
