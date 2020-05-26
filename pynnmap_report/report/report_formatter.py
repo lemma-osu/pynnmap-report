@@ -1,3 +1,6 @@
+"""
+Definition of formatter base class
+"""
 import re
 
 from reportlab import platypus as p
@@ -6,12 +9,15 @@ from reportlab.lib import units as u
 
 from pynnmap.misc import utilities
 
-from pynnmap_report.report import report_styles
+from . import report_styles
 
 STYLES = report_styles.get_report_styles()
 
 
 def page_break(orientation):
+    """
+    Create page break using the specified orientation
+    """
     return [
         p.NextPageTemplate(orientation),
         p.PageBreak(),
@@ -19,6 +25,9 @@ def page_break(orientation):
 
 
 def make_title(title_str):
+    """
+    Render the specified title as a Platypus table
+    """
     para = p.Paragraph(title_str, STYLES["section_style"])
     table = p.Table([[para]], colWidths=[7.5 * u.inch])
     table.setStyle(
@@ -37,6 +46,9 @@ def make_title(title_str):
 
 
 def make_figure_table(image_files):
+    """
+    Create a table of images from existing image files
+    """
     cols = 2
     table_data = []
     row_data = []
@@ -69,6 +81,9 @@ def make_figure_table(image_files):
 
 
 def txt_to_html(in_str):
+    """
+    Convert text values to their HTML equivalents
+    """
     replace_list = {
         ">": "&gt;",
         "<": "&lt;",
@@ -79,12 +94,22 @@ def txt_to_html(in_str):
 
 
 class ReportFormatter:
+    """
+    Base class for all report formatting sections.  A formatter generally
+    takes accuracy assessment information from files and formats them into
+    the accuracy assessment report.
+    """
+
     _required = []
 
     # Set up an enumeration for the different pages
     (TITLE, PORTRAIT, LANDSCAPE) = ("title", "portrait", "landscape")
 
     def check_missing_files(self):
+        """
+        Before running formatter, ensure that all needed files are present.
+        If files are missing, raise error
+        """
         files = [getattr(self, attr) for attr in self._required]
         try:
             utilities.check_missing_files(files)
@@ -93,4 +118,8 @@ class ReportFormatter:
             raise err
 
     def clean_up(self):
+        """
+        Optional function to implement by subclasses to clean up temporary
+        files
+        """
         pass
