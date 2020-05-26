@@ -1,149 +1,162 @@
+"""
+Paragraph, table and document styles used in report creation
+"""
 from reportlab import platypus as p
 from reportlab import rl_config
 from reportlab.lib import colors, enums, fonts, pagesizes, units as u
 
 from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfgen import canvas
 
+from .config import FontConfig
+
+
+def register_custom_font(font_family, font_name, file_name, bold, italic):
+    """
+    Register a font from a file into the specified family using the
+    specified font name.  Upon success, the registered font_name is returned
+    """
+    rl_config.warnOnMissingFontGlyphs = 0
+    pdfmetrics.registerFont(TTFont(font_name, file_name))
+    fonts.addMapping(font_family, bold, italic, font_name)
+    return font_name
+
 
 def get_report_styles():
-
-    # Output container for all derived styles
-    report_styles = {}
-
-    # Register additional font support
-    rl_config.warnOnMissingFontGlyphs = 0
-    pdfmetrics.registerFont(TTFont("Garamond", "C:/windows/fonts/gara.ttf"))
-    pdfmetrics.registerFont(
-        TTFont("Garamond-Bold", "C:/windows/fonts/garabd.ttf")
-    )
-    pdfmetrics.registerFont(
-        TTFont("Garamond-Italic", "C:/windows/fonts/garait.ttf")
-    )
-
-    fonts.addMapping("Garamond", 0, 0, "Garamond")
-    fonts.addMapping("Garamond", 0, 1, "Garamond-Italic")
-    fonts.addMapping("Garamond", 1, 0, "Garamond-Bold")
-    fonts.addMapping("Garamond", 1, 1, "Garamond-Italic")
+    """
+    Build custom paragraph and table styles and return to caller
+    """
+    try:
+        normal_font = register_custom_font(
+            "Garamond",
+            "Garamond",
+            FontConfig.GARAMOND["regular_fn"],
+            False,
+            False,
+        )
+        bold_font = register_custom_font(
+            "Garamond",
+            "Garamond-Bold",
+            FontConfig.GARAMOND["bold_fn"],
+            True,
+            False,
+        )
+    except (FileNotFoundError, TTFError):
+        normal_font = "Helvetica"
+        bold_font = "Helvetica-Bold"
 
     lead_multiplier = 1.20
-
-    body_style = ParagraphStyle(
+    styles = dict()
+    styles["body_style"] = ParagraphStyle(
         name="Normal",
-        fontName="Garamond",
+        fontName=normal_font,
         fontSize=11.5,
         leading=11.5 * lead_multiplier,
         alignment=enums.TA_LEFT,
     )
-    report_styles["body_style"] = body_style
 
-    body_style_right = ParagraphStyle(
-        name="BodyRight", parent=body_style, alignment=enums.TA_RIGHT,
+    styles["body_style_right"] = ParagraphStyle(
+        name="BodyRight", parent=styles["body_style"], alignment=enums.TA_RIGHT,
     )
-    report_styles["body_style_right"] = body_style_right
 
-    body_style_center = ParagraphStyle(
-        name="BodyCenter", parent=body_style, alignment=enums.TA_CENTER,
+    styles["body_style_center"] = ParagraphStyle(
+        name="BodyCenter",
+        parent=styles["body_style"],
+        alignment=enums.TA_CENTER,
     )
-    report_styles["body_style_center"] = body_style_center
 
-    body_style_10 = ParagraphStyle(
+    styles["body_style_10"] = ParagraphStyle(
         name="BodySmall",
-        parent=body_style,
+        parent=styles["body_style"],
         fontSize=10,
         leading=10 * lead_multiplier,
     )
-    report_styles["body_style_10"] = body_style_10
 
-    body_style_9 = ParagraphStyle(
+    styles["body_style_9"] = ParagraphStyle(
         name="Body9",
-        parent=body_style,
+        parent=styles["body_style"],
         fontSize=9,
         leading=9 * lead_multiplier,
     )
-    report_styles["body_style_9"] = body_style_9
 
-    body_style_10_right = ParagraphStyle(
-        name="BodySmallRight", parent=body_style_10, alignment=enums.TA_RIGHT,
+    styles["body_style_10_right"] = ParagraphStyle(
+        name="BodySmallRight",
+        parent=styles["body_style_10"],
+        alignment=enums.TA_RIGHT,
     )
-    report_styles["body_style_10_right"] = body_style_10_right
 
-    body_style_10_center = ParagraphStyle(
-        name="BodySmallCenter", parent=body_style_10, alignment=enums.TA_CENTER,
+    styles["body_style_10_center"] = ParagraphStyle(
+        name="BodySmallCenter",
+        parent=styles["body_style_10"],
+        alignment=enums.TA_CENTER,
     )
-    report_styles["body_style_10_center"] = body_style_10_center
 
-    indented = ParagraphStyle(
-        name="Indented", parent=body_style, leftIndent=24,
+    styles["indented"] = ParagraphStyle(
+        name="Indented", parent=styles["body_style"], leftIndent=24,
     )
-    report_styles["indented"] = indented
 
-    contact_style = ParagraphStyle(
-        name="Contact", parent=body_style, fontSize=10,
+    styles["contact_style"] = ParagraphStyle(
+        name="Contact", parent=styles["body_style"], fontSize=10,
     )
-    report_styles["contact_style"] = contact_style
 
-    contact_style_right = ParagraphStyle(
-        name="ContactRight", parent=contact_style, alignment=enums.TA_RIGHT,
+    styles["contact_style_right"] = ParagraphStyle(
+        name="ContactRight",
+        parent=styles["contact_style"],
+        alignment=enums.TA_RIGHT,
     )
-    report_styles["contact_style_right"] = contact_style_right
 
-    contact_style_right_bold = ParagraphStyle(
+    styles["contact_style_right_bold"] = ParagraphStyle(
         name="ContactRightBold",
-        parent=contact_style_right,
-        fontName="Garamond-Bold",
+        parent=styles["contact_style_right"],
+        fontName=bold_font,
     )
-    report_styles["contact_style_right_bold"] = contact_style_right_bold
 
-    heading_style = ParagraphStyle(
+    styles["heading_style"] = ParagraphStyle(
         name="Heading",
-        parent=body_style,
-        fontName="Garamond-Bold",
+        parent=styles["body_style"],
+        fontName=bold_font,
         fontSize=16,
         leading=16 * lead_multiplier,
     )
-    report_styles["heading_style"] = heading_style
 
-    code_style = ParagraphStyle(
-        name="Code", parent=body_style, fontSize=7, leading=7 * lead_multiplier,
+    styles["code_style"] = ParagraphStyle(
+        name="Code",
+        parent=styles["body_style"],
+        fontSize=7,
+        leading=7 * lead_multiplier,
     )
-    report_styles["code_style"] = code_style
 
-    code_style_right = ParagraphStyle(
-        name="CodeRight", parent=code_style, alignment=enums.TA_RIGHT,
+    styles["code_style_right"] = ParagraphStyle(
+        name="CodeRight", parent=styles["code_style"], alignment=enums.TA_RIGHT,
     )
-    report_styles["code_style_right"] = code_style_right
 
-    title_style = ParagraphStyle(
+    styles["title_style"] = ParagraphStyle(
         name="Title",
-        parent=body_style,
-        fontName="Garamond-Bold",
+        parent=styles["body_style"],
+        fontName=bold_font,
         fontSize=18,
         leading=18 * lead_multiplier,
         leftIndent=1.7 * u.inch,
     )
-    report_styles["title_style"] = title_style
 
-    sub_title_style = ParagraphStyle(
+    styles["sub_title_style"] = ParagraphStyle(
         name="Subtitle",
-        parent=title_style,
-        fontName="Garamond",
+        parent=styles["title_style"],
+        fontName=normal_font,
         fontSize=14,
         leading=14 * lead_multiplier,
     )
-    report_styles["sub_title_style"] = sub_title_style
 
-    section_style = ParagraphStyle(
+    styles["section_style"] = ParagraphStyle(
         name="Section",
-        parent=title_style,
+        parent=styles["title_style"],
         alignment=enums.TA_CENTER,
         leftIndent=0.0,
     )
-    report_styles["section_style"] = section_style
 
-    default_table_style = p.TableStyle(
+    styles["default_table_style"] = p.TableStyle(
         [
             ("GRID", (0, 0), (-1, -1), 1, colors.white),
             ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
@@ -152,16 +165,19 @@ def get_report_styles():
             ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
         ]
     )
-    report_styles["default_table_style"] = default_table_style
-
-    return report_styles
+    return styles
 
 
 def _do_nothing(_canvas, _doc):
-    pass
+    """
+    No-op on page transition
+    """
 
 
 def _set_background(canvas_, portrait_):
+    """
+    Set the background based on the orientation of the page
+    """
     canvas_.setStrokeColor(colors.black)
     canvas_.setLineWidth(1)
     canvas_.setFillColor("#e6ded5")
@@ -179,6 +195,9 @@ def _set_background(canvas_, portrait_):
 
 
 def title(canvas_, _doc):
+    """
+    Create the title page which has the LEMMA logo on it
+    """
     canvas_.saveState()
     _set_background(canvas_, portrait_=True)
     lemma_img = (
@@ -197,18 +216,29 @@ def title(canvas_, _doc):
 
 
 def portrait(canvas_, _doc):
+    """
+    Create a portrait page with custom background
+    """
     canvas_.saveState()
     _set_background(canvas_, portrait_=True)
     canvas_.restoreState()
 
 
 def landscape(canvas_, _doc):
+    """
+    Create a landscape page with custom background
+    """
     canvas_.saveState()
     _set_background(canvas_, portrait_=False)
     canvas_.restoreState()
 
 
 class GnnDocTemplate(p.BaseDocTemplate):
+    """
+    Base template for GNN report including custom pages for portrait and
+    landscape orientations and title page
+    """
+
     def __init__(self, fn, **kwargs):
         super().__init__(fn, **kwargs)
         self.pagesize = [8.5 * u.inch, 11.0 * u.inch]

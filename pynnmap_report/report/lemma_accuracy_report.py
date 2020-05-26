@@ -5,7 +5,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
 
-# from .introduction_formatter import IntroductionFormatter
+from .introduction_formatter import IntroductionFormatter
 from .attribute_accuracy_formatter import AttributeAccuracyFormatter
 
 
