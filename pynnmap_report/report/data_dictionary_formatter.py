@@ -1,31 +1,39 @@
+"""
+Formatter for listing the attribute data dictionary
+"""
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
-from pynnmap_report.report import report_formatter
-from pynnmap_report.report import report_styles
+from . import report_styles
+from .report_formatter import (
+    ReportFormatter,
+    page_break,
+    make_title,
+    txt_to_html,
+)
 
 
-class DataDictionaryFormatter(report_formatter.ReportFormatter):
+class DataDictionaryFormatter(ReportFormatter):
+    """
+    Formatter for listing the attribute data dictionary
+    """
+
     _required = ["stand_metadata_file"]
 
     def __init__(self, parameter_parser):
-        super(DataDictionaryFormatter, self).__init__()
-        pp = parameter_parser
-        self.stand_metadata_file = pp.stand_metadata_file
-        self.model_type = pp.model_type
+        super().__init__()
+        self.stand_metadata_file = parameter_parser.stand_metadata_file
+        self.model_type = parameter_parser.model_type
 
         self.check_missing_files()
 
     def run_formatter(self):
-        return self._create_story()
-
-    def clean_up(self):
-        pass
-
-    def _create_story(self):
+        """
+        Run formatter to create the data dictionary
+        """
         # Set up an empty list to hold the story
         story = []
 
@@ -33,20 +41,19 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
         styles = report_styles.get_report_styles()
 
         # Create a page break
-        story = self._make_page_break(story, self.PORTRAIT)
+        story.extend(page_break(self.PORTRAIT))
 
         # Section title
-        title_str = "<strong>Data Dictionary</strong>"
-        story.append(self._make_title(title_str))
+        story.append(make_title("<strong>Data Dictionary</strong>"))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Read in the stand attribute metadata
-        mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
+        metadata_parser = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
 
         # Subset the attributes to those that are accuracy attributes, are
         # identified to go into the report, and are not species variables
         attrs = []
-        for attr in mp.attributes:
+        for attr in metadata_parser.attributes:
             if (
                 attr.is_accuracy_attr() is True
                 and attr.is_project_attr() is True
@@ -60,7 +67,7 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
         # Iterate through the attributes and print out the field information
         # and codes if present
         for attr in attrs:
-            metadata = mp.get_attribute(attr)
+            metadata = metadata_parser.get_attribute(attr)
             field_name = metadata.field_name
             units = metadata.units
             description = metadata.description
@@ -82,15 +89,17 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
                     code_para = p.Paragraph(
                         code.code_value, styles["code_style"]
                     )
-                    description = self.txt_to_html(code.description)
+                    description = txt_to_html(code.description)
                     code_desc_para = p.Paragraph(
                         description, styles["code_style"]
                     )
                     code_table.append([code_para, code_desc_para])
 
                 # Convert this to a reportlab table
-                t = p.Table(code_table, colWidths=[0.75 * u.inch, 4.5 * u.inch])
-                t.setStyle(
+                table = p.Table(
+                    code_table, colWidths=[0.75 * u.inch, 4.5 * u.inch]
+                )
+                table.setStyle(
                     p.TableStyle(
                         [
                             ("TOPPADDING", (0, 0), (-1, -1), 3),
@@ -104,7 +113,7 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
                 )
 
                 # Create a stack of the field description and field codes
-                elements = [[field_desc_para], [t]]
+                elements = [[field_desc_para], [table]]
 
             # If no codes exist, just add the field description
             else:
@@ -129,8 +138,10 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
             dictionary_table.append([field_para, description_table])
 
         # Format the dictionary table into a reportlab table
-        t = p.Table(dictionary_table, colWidths=[1.6 * u.inch, 5.4 * u.inch])
-        t.setStyle(
+        table = p.Table(
+            dictionary_table, colWidths=[1.6 * u.inch, 5.4 * u.inch]
+        )
+        table.setStyle(
             p.TableStyle(
                 [
                     ("TOPPADDING", (0, 0), (0, -1), 5),
@@ -142,7 +153,7 @@ class DataDictionaryFormatter(report_formatter.ReportFormatter):
                 ]
             )
         )
-        story.append(t)
+        story.append(table)
 
         # Description of the species information that is attached to ArcInfo
         # grids.  We don't enumerate the codes here, but just give this
