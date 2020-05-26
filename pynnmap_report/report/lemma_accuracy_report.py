@@ -1,19 +1,27 @@
+"""
+LEMMA GNN accuracy report with one page per attribute
+"""
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
 
-from pynnmap_report.report.introduction_formatter import IntroductionFormatter
-from pynnmap_report.report.attribute_accuracy_formatter import (
-    AttributeAccuracyFormatter,
-)
+# from .introduction_formatter import IntroductionFormatter
+from .attribute_accuracy_formatter import AttributeAccuracyFormatter
 
 
 class LemmaAccuracyReport:
+    """
+    LEMMA GNN accuracy report with one page per attribute
+    """
+
     def __init__(self, parameter_parser):
         self.parameter_parser = parameter_parser
         self.story = []
 
     def create_accuracy_report(self):
+        """
+        Run the report and save to PDF file
+        """
         parser = self.parameter_parser
 
         # Set up the document template
@@ -38,7 +46,7 @@ class LemmaAccuracyReport:
                             topPadding=0,
                             id=None,
                         ),
-                    ]
+                    ],
                 ),
             ]
         )

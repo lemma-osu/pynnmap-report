@@ -1,3 +1,6 @@
+"""
+Formatter for giving an introduction to the report
+"""
 import itertools
 import locale
 from datetime import datetime
@@ -6,13 +9,17 @@ from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
 
-from pynnmap_report import LEMMA_LOGO
-from pynnmap_report.report.report_formatter import ReportFormatter, page_break
-from pynnmap_report.report import report_styles
 from pynnmap.parser import xml_report_metadata_parser as xrmp
+
+from .report_formatter import ReportFormatter, page_break
+from . import report_styles
 
 
 class IntroductionFormatter(ReportFormatter):
+    """
+    Formatter for giving an introduction to the report
+    """
+
     _required = ["report_metadata_file"]
 
     # Constants
@@ -29,6 +36,9 @@ class IntroductionFormatter(ReportFormatter):
         self.check_missing_files()
 
     def report_heading(self, rmp):
+        """
+        Report title and information about the model region
+        """
         model_type_dict = {
             "sppsz": "Basal-Area by Species-Size Combinations",
             "trecov": "Tree Percent Cover by Species",
@@ -36,35 +46,27 @@ class IntroductionFormatter(ReportFormatter):
             "sppba": "Basal-Area by Species",
         }
         return [
-            p.ImageAndFlowables(
-                p.Image(
-                    LEMMA_LOGO, 2.0 * u.inch, 1.96 * u.inch, mask="auto"
-                ),
-                [
-                    p.Spacer(1, 0.2 * u.inch),
-                    p.Paragraph(
-                        "GNN Accuracy Assessment Report",
-                        self.styles["title_style"]
-                    ),
-                    p.Paragraph(
-                        "{} (Modeling Region {})".format(
-                            rmp.model_region_name, self.model_region
-                        ),
-                        self.styles["sub_title_style"],
-                    ),
-                    p.Paragraph(
-                        "Model Type: {}".format(
-                            model_type_dict[self.model_type]),
-                        self.styles["sub_title_style"],
-                    ),
-                ],
-                imageSide="left",
-                imageRightPadding=12,
+            p.Spacer(0.0, 0.43 * u.inch),
+            p.Paragraph(
+                "GNN Accuracy Assessment Report", self.styles["title_style"]
             ),
-            p.Spacer(0.0, 0.3 * u.inch),
+            p.Paragraph(
+                "{} (Modeling Region {})".format(
+                    rmp.model_region_name, self.model_region
+                ),
+                self.styles["sub_title_style"],
+            ),
+            p.Paragraph(
+                "Model Type: {}".format(model_type_dict[self.model_type]),
+                self.styles["sub_title_style"],
+            ),
+            p.Spacer(0.0, 0.7 * u.inch),
         ]
 
     def model_region_description(self, rmp):
+        """
+        Model region image and description
+        """
         return [
             p.ImageAndFlowables(
                 p.Image(
@@ -83,6 +85,10 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def contact_information(self, rmp):
+        """
+        Table of contact information for LEMMA team
+        """
+
         def _contact_cell(_contact):
             contact_str = """
                 <b>{name}</b><br/>
@@ -133,6 +139,9 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def website_information(self):
+        """
+        Website address and link
+        """
         return [
             p.Paragraph(
                 (
@@ -146,6 +155,9 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def model_information(self, rmp):
+        """
+        General model information
+        """
         time_str = "<strong>Report Date:</strong> {}".format(
             datetime.now().strftime("%Y.%m.%d")
         )
@@ -178,6 +190,9 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def plot_matching(self):
+        """
+        Matching plots to imagery section
+        """
         plot_title = """
             <strong>Matching Plots to Imagery for Model Development:</strong>
         """
@@ -203,6 +218,9 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def mask_information(self):
+        """
+        Nonforest mask section
+        """
         mask_str = """
             An important limitation of the GNN map products is the separation
             of forest and nonforest lands. The GNN modeling applies to forest
@@ -274,6 +292,9 @@ class IntroductionFormatter(ReportFormatter):
         )
 
     def plots_by_date(self, rmp):
+        """
+        Build table of model plots by data source and year
+        """
         # Header row
         plot_table = [
             [
@@ -366,6 +387,9 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def spatial_predictors(self, rmp):
+        """
+        Table of spatial predictor variables
+        """
         ord_var_str = """
             The list below represents the spatial predictor
             (GIS/remote sensing) variables that were used in creating
@@ -419,6 +443,9 @@ class IntroductionFormatter(ReportFormatter):
         ]
 
     def run_formatter(self):
+        """
+        Run formatter for the introduction
+        """
         # Report metadata
         rmp = xrmp.XMLReportMetadataParser(self.report_metadata_file)
 
