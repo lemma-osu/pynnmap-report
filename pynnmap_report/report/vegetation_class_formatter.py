@@ -1,35 +1,35 @@
+"""
+Formatter to create an error matrix of vegetation class
+"""
 import re
 
 import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
-from six.moves import range
 
-from pynnmap_report.report import report_formatter
-from pynnmap_report.report import report_styles
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
+from . import report_styles
+from .report_formatter import ReportFormatter, page_break, txt_to_html
 
-class VegetationClassFormatter(report_formatter.ReportFormatter):
+
+class VegetationClassFormatter(ReportFormatter):
+    """
+    Formatter to create an error matrix of vegetation class
+    """
+
     _required = ["vc_errmatrix_file", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
-        super(VegetationClassFormatter, self).__init__()
-        pp = parameter_parser
-        self.vc_errmatrix_file = pp.vegclass_errmatrix_file
-        self.stand_metadata_file = pp.stand_metadata_file
-
+        self.vc_errmatrix_file = parameter_parser.vegclass_errmatrix_file
+        self.stand_metadata_file = parameter_parser.stand_metadata_file
         self.check_missing_files()
 
     def run_formatter(self):
-        # Push the vegclass error matrix into the main story
-        return self._create_story()
-
-    def clean_up(self):
-        pass
-
-    def _create_story(self):
+        """
+        Run formatter for the VEGCLASS attribute
+        """
         # Set up an empty list to hold the story
         story = []
 
@@ -37,16 +37,20 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         styles = report_styles.get_report_styles()
 
         # Create a page break
-        story = self._make_page_break(story, self.LANDSCAPE)
+        story.extend(page_break(self.LANDSCAPE))
 
         # This class is somewhat of a hack, in that it likely only works on
         # rotated paragraphs which fit into the desired cell area
         class RotatedParagraph(p.Paragraph):
-            def wrap(self, avail_height, avail_width):
-                h, w = p.Paragraph.wrap(
-                    self, self.canv.stringWidth(self.text), self.canv._leading
+            """Rotated platypus paragraph"""
+
+            def wrap(self, _dummy_width, _dummy_height):
+                height, width = p.Paragraph.wrap(
+                    self,
+                    self.canv.stringWidth(self.text),
+                    self.canv._leading,  # pylint: disable=protected-access
                 )
-                return w, h
+                return width, height
 
             def draw(self):
                 self.canv.rotate(90)
@@ -59,8 +63,8 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         title_str += "Locations</strong>"
 
         para = p.Paragraph(title_str, styles["section_style"])
-        t = p.Table([[para]], colWidths=[10.0 * u.inch])
-        t.setStyle(
+        table = p.Table([[para]], colWidths=[10.0 * u.inch])
+        table.setStyle(
             p.TableStyle(
                 [
                     ("TOPPADDING", (0, 0), (-1, -1), 3),
@@ -72,7 +76,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
                 ]
             )
         )
-        story.append(t)
+        story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Read in the vegclass error matrix
@@ -83,10 +87,10 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         vc_df.drop(columns=["OBSERVED"], inplace=True)
 
         # Read in the stand attribute metadata
-        mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
+        metadata_parser = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
 
         # Get the class names from the metadata
-        vegclass_metadata = mp.get_attribute("VEGCLASS")
+        vegclass_metadata = metadata_parser.get_attribute("VEGCLASS")
         vc_codes = vegclass_metadata.codes
 
         # Create a list of lists to hold the vegclass table
@@ -179,8 +183,8 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         widths = [x * u.inch for x in widths]
 
         # Convert the vegclass table into a reportlab table
-        t = p.Table(vegclass_table, colWidths=widths)
-        t.setStyle(
+        table = p.Table(vegclass_table, colWidths=widths)
+        table.setStyle(
             p.TableStyle(
                 [
                     ("SPAN", (0, 0), (1, 1)),
@@ -206,7 +210,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
 
         for key in correct:
             val = correct[key]
-            t.setStyle(
+            table.setStyle(
                 p.TableStyle(
                     [
                         (
@@ -236,7 +240,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
 
         for key in fuzzy:
             for elem in fuzzy[key]:
-                t.setStyle(
+                table.setStyle(
                     p.TableStyle(
                         [
                             (
@@ -250,7 +254,7 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
                 )
 
         # Add this table to the story
-        story.append(t)
+        story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Explanation and definitions of vegetation class categories
@@ -280,9 +284,12 @@ class VegetationClassFormatter(report_formatter.ReportFormatter):
         # Print out the vegclass code definitions
         for code in vc_codes:
             label = code.label
-            desc = self.txt_to_html(code.description)
+            desc = txt_to_html(code.description)
             doc_str = "<strong>" + label + ":</strong> " + desc
             para = p.Paragraph(doc_str, styles["body_style_9"])
             story.append(para)
 
         return story
+
+    def clean_up(self):
+        pass
