@@ -1,3 +1,6 @@
+"""
+Chart classes for creating scatterplots and histograms
+"""
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,10 +14,18 @@ mpl.rcParams["font.family"] = "Open Sans"
 
 
 def get_global_limits(*iterables):
+    """
+    Return the global minimum/maximum across multiple iterables
+    """
     return min(min(x) for x in iterables), max(max(x) for x in iterables)
 
 
 class Scatterplot:
+    """
+    Simple scatterplot using matplotlib and accommodating kernel density
+    estimation coloring using the kde keyword in __call__
+    """
+
     def __init__(self, x, y):
         self.x = np.array(x)
         self.y = np.array(y)
@@ -25,15 +36,10 @@ class Scatterplot:
         kde = kwargs.get("kde", True)
         self._draw(*self._symbolize_series(kde=kde), **kwargs)
 
-    def _get_limits(self):
-        # Find the min and max of both axes
-        x_min, y_min = self.x.min(), self.y.min()
-        x_max, y_max = self.x.max(), self.y.max()
-        abs_min = x_min if x_min < y_min else y_min
-        abs_max = x_max if x_max > y_max else y_max
-        return [abs_min, abs_max, abs_max - abs_min]
-
     def _initialize_figure(self, width, height, dpi=250):
+        """
+        Initialize the scatterplot
+        """
         fig = plt.gcf()
         fig.clf()
         fig.set_figwidth(width)
@@ -44,7 +50,9 @@ class Scatterplot:
         plt.ylim(self.min - buf, self.max + buf)
 
     def _symbolize_series(self, kde=True):
-        # Calculate the point density
+        """
+        Return x and y series optionally symbolized by kernel density estimator
+        """
         if kde:
             # Sort the points by density, so that the densest points are
             # plotted last
@@ -96,6 +104,13 @@ class Scatterplot:
 
 
 class ObservedPredictedScatterplot(Scatterplot):
+    """
+    Specialization of Scatterplot to explicitly label graph as an observed-
+    predicted scatterplot - observed is Y-axis, predicted is X-axis.  This
+    adds labels for X and Y axes, adds a 1-to-1 line, and adds some simple
+    statistics relevant to observed-predicted comparisons.
+    """
+
     def _draw_1_to_1(self, axes):
         plt.plot(
             [self.min, self.max], [self.min, self.max], "k-", linewidth=0.5
@@ -105,7 +120,7 @@ class ObservedPredictedScatterplot(Scatterplot):
         )
 
     def _draw(self, x, y, z, **kwargs):
-        super()._draw(x, y, z, **kwargs)
+        super()._draw(y, x, z, **kwargs)
         axes = plt.gca()
         self._draw_1_to_1(axes)
 
@@ -134,6 +149,10 @@ class ObservedPredictedScatterplot(Scatterplot):
 
 
 def draw_scatterplot(df, attr, output_file="foo.png", **kwargs):
+    """
+    Render a scatterplot from LEMMA paired dataframe using the specified
+    attribute
+    """
     # Extract the observed and predicted series from the data frame
     name, units = attr.field_name, attr.units
     obs, prd = df[name + "_O"], df[name + "_P"]
@@ -293,7 +312,7 @@ class Histogram:
     for use in these accuracy assessment reports.
     """
 
-    def __init__(self, series_group, labels, x_title, y_title):
+    def __init__(self, series_group, labels, x_title="X", y_title="Y"):
         self.series_group = series_group
         self.legend = Legend(series_group.names)
         self.labels = Labels(labels)
