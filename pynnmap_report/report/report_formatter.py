@@ -9,9 +9,11 @@ from reportlab.lib import units as u
 
 from pynnmap.misc import utilities
 
-from . import report_styles
+from .styles.paragraph_styles import get_paragraph_styles
+from .styles.table_styles import get_table_styles
 
-STYLES = report_styles.get_report_styles()
+
+STYLES = get_paragraph_styles("Open-Sans")
 
 
 def page_break(orientation):
@@ -104,6 +106,10 @@ class ReportFormatter:
 
     # Set up an enumeration for the different pages
     (TITLE, PORTRAIT, LANDSCAPE) = ("title", "portrait", "landscape")
+
+    def __init__(self):
+        self.styles = get_paragraph_styles("Open-Sans")
+        self.table_styles = get_table_styles()
 
     def check_missing_files(self):
         """
