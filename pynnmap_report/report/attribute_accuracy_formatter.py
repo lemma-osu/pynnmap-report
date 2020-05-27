@@ -24,7 +24,8 @@ from pynnmap.parser.xml_stand_metadata_parser import (
 )
 
 from . import chart_func as cf
-from .report_formatter import ReportFormatter, page_break
+from .report_formatter import ReportFormatter
+from .accuracy_intro_formatter import AccuracyIntroductionFormatter
 
 
 def local_image_fn(attr):
@@ -141,9 +142,10 @@ class AttributeAccuracyFormatter(ReportFormatter):
         # Create the figures
         self.create_figures(attrs)
 
-        # Build the individual attribute pages
-        flowables = []
+        # Create the introduction to the figures
+        flowables = AccuracyIntroductionFormatter().run_formatter()
 
+        # Build the individual attribute pages
         for attr in attrs:
             page = self.build_flowable_page(attr)
             flowables.extend(page)
