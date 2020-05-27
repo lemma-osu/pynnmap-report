@@ -90,7 +90,7 @@ class Scatterplot:
         fig = plt.gcf()
         axes = plt.gca()
 
-        axes.scatter(x, y, s=4, c=z, edgecolor="", linewidth=0.25)
+        axes.scatter(x, y, s=4, c=z, linewidth=0.25)
         self._draw_axes(axes, **kwargs)
         # self._draw_grid_lines(axes)
 

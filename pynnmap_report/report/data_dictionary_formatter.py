@@ -7,13 +7,7 @@ from reportlab.lib import units as u
 
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
-from . import report_styles
-from .report_formatter import (
-    ReportFormatter,
-    page_break,
-    make_title,
-    txt_to_html,
-)
+from .report_formatter import ReportFormatter, page_break, txt_to_html
 
 
 class DataDictionaryFormatter(ReportFormatter):
@@ -37,14 +31,24 @@ class DataDictionaryFormatter(ReportFormatter):
         # Set up an empty list to hold the story
         story = []
 
-        # Import the report styles
-        styles = report_styles.get_report_styles()
-
         # Create a page break
         story.extend(page_break(self.PORTRAIT))
 
         # Section title
-        story.append(make_title("<strong>Data Dictionary</strong>"))
+        title_str = "<strong>Data Dictionary</strong>"
+        para = p.Paragraph(title_str, self.styles["section_style"])
+        table = p.Table([[para]], colWidths=[7.5 * u.inch])
+        table.setStyle(
+            p.TableStyle(
+                [
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Read in the stand attribute metadata
@@ -72,10 +76,10 @@ class DataDictionaryFormatter(ReportFormatter):
             units = metadata.units
             description = metadata.description
 
-            field_para = p.Paragraph(field_name, styles["body_style_10"])
+            field_para = p.Paragraph(field_name, self.styles["body_9"])
             if units != "none":
                 description += " (" + units + ")"
-            field_desc_para = p.Paragraph(description, styles["body_style_10"])
+            field_desc_para = p.Paragraph(description, self.styles["body_9"])
 
             # If this field has codes, create a sub table underneath the
             # field description
@@ -87,11 +91,11 @@ class DataDictionaryFormatter(ReportFormatter):
                 # Iterate over all code rows and append to the code_table
                 for code in metadata.codes:
                     code_para = p.Paragraph(
-                        code.code_value, styles["code_style"]
+                        code.code_value, self.styles["code_style"]
                     )
                     description = txt_to_html(code.description)
                     code_desc_para = p.Paragraph(
-                        description, styles["code_style"]
+                        description, self.styles["code_style"]
                     )
                     code_table.append([code_para, code_desc_para])
 
@@ -104,7 +108,8 @@ class DataDictionaryFormatter(ReportFormatter):
                         [
                             ("TOPPADDING", (0, 0), (-1, -1), 3),
                             ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                            ("BACKGROUND", (0, 0), (-1, -1), "#f7f7ea"),
+                            # ("BACKGROUND", (0, 0), (-1, -1), "#f7f7ea"),
+                            ("BACKGROUND", (0, 0), (-1, -1), "#f8f8f8"),
                             ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
                             ("VALIGN", (0, 0), (-1, -1), "TOP"),
                             ("GRID", (0, 0), (-1, -1), 0.25, colors.white),
@@ -149,7 +154,8 @@ class DataDictionaryFormatter(ReportFormatter):
                     ("GRID", (0, 0), (-1, -1), 1, colors.white),
                     ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
                 ]
             )
         )
@@ -159,9 +165,7 @@ class DataDictionaryFormatter(ReportFormatter):
         # grids.  We don't enumerate the codes here, but just give this
         # summary information
         spp_str = """
-            Individual species abundances are attached to ArcInfo grids that
-            LEMMA distributes.  For this model, fields designate species
-            codes based on the <link color="#0000ff"
+            Individual species codes are based on the <link color="#0000ff"
             href="http://plants.usda.gov/">USDA PLANTS database</link> from
             the year 2000, and values represent species
         """
@@ -170,7 +174,7 @@ class DataDictionaryFormatter(ReportFormatter):
         elif self.model_type in ["trecov", "wdycov"]:
             spp_str += " percent cover."
 
-        para = p.Paragraph(spp_str, styles["body_style"])
+        para = p.Paragraph(spp_str, self.styles["body_style"])
         story.append(p.Spacer(0, 0.1 * u.inch))
         story.append(para)
 

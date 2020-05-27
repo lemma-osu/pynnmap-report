@@ -11,8 +11,8 @@ from reportlab.lib import units as u
 
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 
+from .. import LEMMA_LOGO
 from .report_formatter import ReportFormatter, page_break
-from . import report_styles
 
 
 class IntroductionFormatter(ReportFormatter):
@@ -31,7 +31,6 @@ class IntroductionFormatter(ReportFormatter):
         self.model_region = parameter_parser.model_region
         self.model_type = parameter_parser.model_type
         self.model_year = parameter_parser.model_year
-        self.styles = report_styles.get_report_styles()
 
         self.check_missing_files()
 
@@ -46,21 +45,31 @@ class IntroductionFormatter(ReportFormatter):
             "sppba": "Basal-Area by Species",
         }
         return [
-            p.Spacer(0.0, 0.43 * u.inch),
-            p.Paragraph(
-                "GNN Accuracy Assessment Report", self.styles["title_style"]
+            p.ImageAndFlowables(
+                p.Image(LEMMA_LOGO, 2.0 * u.inch, 1.96 * u.inch, mask="auto"),
+                [
+                    p.Spacer(1, 0.2 * u.inch),
+                    p.Paragraph(
+                        "GNN Accuracy Assessment Report",
+                        self.styles["title_style"],
+                    ),
+                    p.Paragraph(
+                        "{} (Modeling Region {})".format(
+                            rmp.model_region_name, self.model_region
+                        ),
+                        self.styles["sub_title_style"],
+                    ),
+                    p.Paragraph(
+                        "Model Type: {}".format(
+                            model_type_dict[self.model_type]
+                        ),
+                        self.styles["sub_title_style"],
+                    ),
+                ],
+                imageSide="left",
+                imageRightPadding=12,
             ),
-            p.Paragraph(
-                "{} (Modeling Region {})".format(
-                    rmp.model_region_name, self.model_region
-                ),
-                self.styles["sub_title_style"],
-            ),
-            p.Paragraph(
-                "Model Type: {}".format(model_type_dict[self.model_type]),
-                self.styles["sub_title_style"],
-            ),
-            p.Spacer(0.0, 0.7 * u.inch),
+            p.Spacer(0.0, 0.3 * u.inch),
         ]
 
     def model_region_description(self, rmp):
@@ -93,9 +102,9 @@ class IntroductionFormatter(ReportFormatter):
             contact_str = """
                 <b>{name}</b><br/>
                 {position}<br/>
-                {affiliation}><br/>
+                {affiliation}<br/>
                 Phone: {phone}<br/>
-                Email: {email}"
+                Email: {email}
             """
             return p.Paragraph(
                 contact_str.format(
@@ -124,7 +133,8 @@ class IntroductionFormatter(ReportFormatter):
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                     ("LEFTPADDING", (0, 0), (-1, -1), 6),
                     ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
                     ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                     ("GRID", (0, 0), (-1, -1), 1.0, colors.white),
@@ -200,14 +210,14 @@ class IntroductionFormatter(ReportFormatter):
             The current versions of the GNN maps were developed using
             data from inventory plots that span a range of dates, and
             from a yearly time-series of Landsat imagery mosaics from
-            1984 to 2012 developed with the LandTrendr algorithms
-            (Kennedy et al., 2010). For model development, plots were
-            matched to spectral data for the same year as plot
-            measurement. In addition, because as many as four plots were
-            measured at a given plot location, we constrained the
-            imputation for a given map year to only one plot from each
-            location -- the plot nearest in date to the imagery (map)
-            year. See Ohmann et al. (in press) for more detailed
+            1985 to 2017 developed using the Landscape Change Monitoring
+            Study (LCMS) algorithms (Cohen et al., 2018). For model
+            development, plots were matched to spectral data for the
+            same year as plot measurement. In addition, because as many
+            as four plots were measured at a given plot location, we
+            constrained the imputation for a given map year to only one plot
+            from each location -- the plot nearest in date to the imagery
+            (map) year. See Ohmann et al. (2014) for more detailed
             information about the GNN modeling process.
         """
         return [
@@ -265,7 +275,7 @@ class IntroductionFormatter(ReportFormatter):
             plot_count_table.append(flowable)
 
         table = p.Table(plot_count_table)
-        table.setStyle(self.styles["default_table_style"])
+        table.setStyle(self.table_styles["default_table_style"])
 
         return (
             plot_count,
@@ -335,7 +345,7 @@ class IntroductionFormatter(ReportFormatter):
         )
 
         table = p.Table(
-            plot_table, colWidths=[1.3 * u.inch, 4.2 * u.inch, 1.3 * u.inch]
+            plot_table, colWidths=[1.5 * u.inch, 4.2 * u.inch, 1.5 * u.inch]
         )
         table.hAlign = "LEFT"
         table.setStyle(
@@ -344,7 +354,8 @@ class IntroductionFormatter(ReportFormatter):
                     ("GRID", (0, 0), (-1, -2), 1.5, colors.white),
                     ("BOX", (0, -1), (-1, -1), 1.5, colors.white),
                     ("LINEAFTER", (1, -1), (1, -1), 1.5, colors.white),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                     ("TOPPADDING", (0, 0), (1, -2), 2),
                     ("BOTTOMPADDING", (0, 0), (1, -2), 2),
@@ -418,14 +429,15 @@ class IntroductionFormatter(ReportFormatter):
 
         table = p.Table(
             ordination_table,
-            colWidths=[1.0 * u.inch, 2.3 * u.inch, 3.5 * u.inch],
+            colWidths=[1.0 * u.inch, 2.4 * u.inch, 3.8 * u.inch],
         )
         table.hAlign = "LEFT"
         table.setStyle(
             p.TableStyle(
                 [
                     ("GRID", (0, 0), (-1, -1), 1.5, colors.white),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
+                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ]
             )

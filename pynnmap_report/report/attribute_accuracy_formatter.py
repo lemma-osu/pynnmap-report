@@ -1,9 +1,11 @@
+"""
+Accuracy formatter for all information in a single page
+"""
 import os
 
 import numpy as np
 import pandas as pd
-from reportlab.lib.colors import black, yellow, white
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+from reportlab.lib.colors import black, white
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     Image,
@@ -13,7 +15,6 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
-from reportlab.lib.styles import ParagraphStyle
 
 from pynnmap.misc import utilities
 from pynnmap.misc.classification_accuracy import Classifier, Classification
@@ -22,87 +23,8 @@ from pynnmap.parser.xml_stand_metadata_parser import (
     XMLStandMetadataParser,
 )
 
-from pynnmap_report.report import chart_func as cf
-from pynnmap_report.report.report_formatter import ReportFormatter, page_break
-
-
-def get_stylesheet():
-    # Add some fonts
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-
-    pdfmetrics.registerFont(TTFont("Trebuchet", "trebuc.ttf"))
-    pdfmetrics.registerFont(TTFont("TrebuchetBold", "trebucbd.ttf"))
-    pdfmetrics.registerFont(TTFont("TrebuchetItalic", "trebucit.ttf"))
-    pdfmetrics.registerFont(TTFont("TrebuchetBoldItalic", "trebucbi.ttf"))
-
-    styles = {
-        "default": ParagraphStyle(
-            "default",
-            fontName="Trebuchet",
-            fontSize=12,
-            leading=12,
-            leftIndent=0,
-            rightIndent=0,
-            firstLineIndent=0,
-            alignment=TA_LEFT,
-            spaceBefore=0,
-            spaceAfter=0,
-            bulletFontName="Trebuchet",
-            bulletFontSize=10,
-            bulletIndent=0,
-            textColor=black,
-            backColor=None,
-            wordWrap=None,
-            borderWidth=0,
-            borderPadding=0,
-            borderColor=None,
-            borderRadius=None,
-            allowWidows=1,
-            allowOrphans=0,
-            textTransform=None,
-            endDots=None,
-            splitLongWords=1,
-        ),
-    }
-
-    styles["title"] = ParagraphStyle(
-        "title",
-        parent=styles["default"],
-        fontName="TrebuchetBold",
-        fontSize=14,
-    )
-
-    styles["subheading"] = ParagraphStyle(
-        "subheading",
-        parent=styles["default"],
-        fontSize=10,
-        alignment=TA_CENTER,
-    )
-
-    styles["alert"] = ParagraphStyle(
-        "alert", parent=styles["default"], textColor=yellow
-    )
-
-    styles["error_matrix"] = ParagraphStyle(
-        "error_matrix",
-        parent=styles["default"],
-        fontSize=7,
-        leading=7,
-        alignment=TA_RIGHT,
-    )
-
-    styles["error_matrix_center"] = ParagraphStyle(
-        "error_matrix_center",
-        parent=styles["error_matrix"],
-        alignment=TA_CENTER,
-    )
-
-    styles["error_matrix_rot"] = ParagraphStyle(
-        "error_matrix_rot", parent=styles["error_matrix"], alignment=TA_LEFT,
-    )
-
-    return styles
+from . import chart_func as cf
+from .report_formatter import ReportFormatter, page_break
 
 
 def local_image_fn(attr):
@@ -192,7 +114,6 @@ class AttributeAccuracyFormatter(ReportFormatter):
         self.observed_file = parameter_parser.stand_attribute_file
         self.predicted_file = parameter_parser.independent_predicted_file
         self.id_field = parameter_parser.plot_id_field
-        self.stylesheet = get_stylesheet()
         self.riemann_dir = parameter_parser.riemann_output_folder
         self.k = parameter_parser.k
         self.image_files = []
@@ -205,6 +126,9 @@ class AttributeAccuracyFormatter(ReportFormatter):
         self.olofsson_df = pd.read_csv(parameter_parser.regional_olofsson_file)
 
     def run_formatter(self):
+        """
+        Run formatter for all continuous attributes
+        """
         # Read in the stand attribute metadata and get the continuous fields
         metadata_parser = XMLStandMetadataParser(self.stand_metadata_file)
         attrs = metadata_parser.filter(
@@ -219,13 +143,17 @@ class AttributeAccuracyFormatter(ReportFormatter):
 
         # Build the individual attribute pages
         flowables = []
-        flowables.extend(page_break(self.PORTRAIT))
+
         for attr in attrs:
             page = self.build_flowable_page(attr)
             flowables.extend(page)
         return flowables
 
     def create_figures(self, attrs):
+        """
+        Create all figures in advance of building page.  Store all filenames
+        in the image_files instance attribute.
+        """
         attr_fields = [a.field_name for a in attrs]
 
         # Create the paired dataframe for the local data
@@ -358,9 +286,9 @@ class AttributeAccuracyFormatter(ReportFormatter):
         # TODO: Separate into functions
 
         # Style for error matrix
-        em_style = self.stylesheet["error_matrix"]
-        em_rot_style = self.stylesheet["error_matrix_rot"]
-        em_style_center = self.stylesheet["error_matrix_center"]
+        em_style = self.styles["error_matrix"]
+        em_rot_style = self.styles["error_matrix_rot"]
+        em_style_center = self.styles["error_matrix_center"]
 
         # Change column labels to rotated paragraphs
         # Rotate the column labels
@@ -472,6 +400,9 @@ class AttributeAccuracyFormatter(ReportFormatter):
         return table
 
     def clean_up(self):
+        """
+        Remove all image files
+        """
         for fn in self.image_files:
             if os.path.exists(fn):
                 os.remove(fn)
@@ -498,11 +429,12 @@ class AttributeAccuracyFormatter(ReportFormatter):
             ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
             ("ALIGN", (0, 0), (-1, -1), "LEFT"),
         ]
-        default_style = self.stylesheet["default"]
-        subheading_style = self.stylesheet["subheading"]
-        title_style = self.stylesheet["title"]
+        default_style = self.styles["body_11"]
+        title_style = self.styles["body_16"]
+        subheading_style = self.styles["subheading"]
 
         return [
+            PageBreak(),
             Paragraph(title, title_style),
             Spacer(1, 0.1 * inch),
             Paragraph(attr.short_description, default_style),
@@ -553,5 +485,4 @@ class AttributeAccuracyFormatter(ReportFormatter):
                 style=table_style,
                 hAlign="LEFT",
             ),
-            PageBreak(),
         ]
