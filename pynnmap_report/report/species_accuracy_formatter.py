@@ -1,3 +1,6 @@
+"""
+Formatter to report species accuracy including kappas
+"""
 import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
@@ -6,31 +9,29 @@ from reportlab.lib import units as u
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
-from pynnmap_report.report import report_formatter
-from pynnmap_report.report import report_styles
+from . import report_styles
+from .report_formatter import ReportFormatter, page_break, make_title
 
 
-class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
+class SpeciesAccuracyFormatter(ReportFormatter):
+    """
+    Formatter to report species accuracy including kappas
+    """
+
     _required = ["species_accuracy_file", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
         super(SpeciesAccuracyFormatter, self).__init__()
-        pp = parameter_parser
-        self.species_accuracy_file = pp.species_accuracy_file
-        self.stand_metadata_file = pp.stand_metadata_file
-
-        # Get the report metadata if it exists
-        self.report_metadata_file = pp.report_metadata_file
+        self.species_accuracy_file = parameter_parser.species_accuracy_file
+        self.stand_metadata_file = parameter_parser.stand_metadata_file
+        self.report_metadata_file = parameter_parser.report_metadata_file
 
         self.check_missing_files()
 
     def run_formatter(self):
-        return self._create_story()
-
-    def clean_up(self):
-        pass
-
-    def _create_story(self):
+        """
+        Run this formatter for all species attributes
+        """
         # Set up an empty list to hold the story
         story = []
 
@@ -38,13 +39,13 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         styles = report_styles.get_report_styles()
 
         # Create a page break
-        story = self._make_page_break(story, self.PORTRAIT)
+        story.extend(page_break(self.PORTRAIT))
 
         # Section title
         title_str = "<strong>Local-Scale Accuracy Assessment:<br/>"
         title_str += "Species Accuracy at Plot Locations"
         title_str += "</strong>"
-        story.append(self._make_title(title_str))
+        story.append(make_title(title_str))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Kappa explanation
@@ -96,22 +97,27 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         para = p.Paragraph(spp_str, styles["body_style_10"])
         header_row.append(para)
 
-        p1 = p.Paragraph(
-            "<strong>OP/PP</strong>", styles["body_style_10_right"]
-        )
-        p2 = p.Paragraph(
-            "<strong>OP/PA</strong>", styles["body_style_10_right"]
-        )
-        p3 = p.Paragraph(
-            "<strong>OA/PP</strong>", styles["body_style_10_right"]
-        )
-        p4 = p.Paragraph(
-            "<strong>OA/PA</strong>", styles["body_style_10_right"]
-        )
-        header_cells = [[p1, p2], [p3, p4]]
-        t = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-        t.setStyle(styles["default_table_style"])
-        header_row.append(t)
+        header_cells = [
+            [
+                p.Paragraph(
+                    "<strong>OP/PP</strong>", styles["body_style_10_right"]
+                ),
+                p.Paragraph(
+                    "<strong>OP/PA</strong>", styles["body_style_10_right"]
+                ),
+            ],
+            [
+                p.Paragraph(
+                    "<strong>OA/PP</strong>", styles["body_style_10_right"]
+                ),
+                p.Paragraph(
+                    "<strong>OA/PA</strong>", styles["body_style_10_right"]
+                ),
+            ],
+        ]
+        table = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
+        table.setStyle(styles["default_table_style"])
+        header_row.append(table)
 
         kappa_str = "<strong>Kappa coefficient</strong>"
         para = p.Paragraph(kappa_str, styles["body_style_10"])
@@ -122,7 +128,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
         spp_df = pd.read_csv(self.species_accuracy_file)
 
         # Read in the stand attribute metadata
-        mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
+        metadata_parser = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
 
         # Read in the report metadata if it exists
         if self.report_metadata_file:
@@ -132,7 +138,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
 
         # Subset the attributes to just species
         attrs = []
-        for attr in mp.attributes:
+        for attr in metadata_parser.attributes:
             if attr.is_species_attr() and "NOTALY" not in attr.field_name:
                 attrs.append(attr.field_name)
 
@@ -181,9 +187,11 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
                 if i % 2 == 1:
                     count_cells.append(count_row)
                     count_row = []
-            t = p.Table(count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-            t.setStyle(styles["default_table_style"])
-            species_row.append(t)
+            table = p.Table(
+                count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch]
+            )
+            table.setStyle(styles["default_table_style"])
+            species_row.append(table)
 
             # Print out the kappa statistic
             kappa_str = "%.4f" % kappa
@@ -195,8 +203,8 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
 
         # Style this into a reportlab table and add to the story
         col_widths = [(x * u.inch) for x in [4.0, 0.75, 1.5, 0.75]]
-        t = p.Table(species_table, colWidths=col_widths)
-        t.setStyle(
+        table = p.Table(species_table, colWidths=col_widths)
+        table.setStyle(
             p.TableStyle(
                 [
                     ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
@@ -230,7 +238,7 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
                 ]
             )
         )
-        story.append(t)
+        story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         rare_species_str = """
@@ -244,3 +252,6 @@ class SpeciesAccuracyFormatter(report_formatter.ReportFormatter):
 
         # Return this story
         return story
+
+    def clean_up(self):
+        pass
