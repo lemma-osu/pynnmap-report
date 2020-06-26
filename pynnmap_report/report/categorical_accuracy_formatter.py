@@ -1,7 +1,8 @@
 """
-Accuracy formatter for all information in a single page
+Categorical accuracy formatter showing a subset of the information
 """
 import os
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -16,7 +17,6 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from pynnmap.misc import utilities
 from pynnmap.misc.classification_accuracy import Classifier, Classification
 from pynnmap.parser.xml_stand_metadata_parser import (
     Flags,
@@ -24,26 +24,7 @@ from pynnmap.parser.xml_stand_metadata_parser import (
 )
 
 from . import chart_func as cf
-from .report_formatter import ReportFormatter
-from .accuracy_intro_formatter import AccuracyIntroductionFormatter
-
-
-def local_image_fn(attr):
-    """File name for local accuracy scatterplot image"""
-    return "{}.png".format(attr.field_name.lower())
-
-
-def create_local_figures(df, attrs):
-    """
-    Given a set of attributes and a dataframe of predicted and observed
-    values, create a set of scatterplots and return the list of filenames
-    """
-    files = []
-    for attr in attrs:
-        fn = local_image_fn(attr)
-        cf.draw_scatterplot(df, attr, output_file=fn, kde=True)
-        files.append(fn)
-    return files
+from .report_formatter import ReportFormatter, page_break
 
 
 def regional_image_fn(attr):
@@ -64,49 +45,10 @@ def create_regional_figures(area_df, olofsson_df, attrs):
     return files
 
 
-def riemann_image_fn(attr, resolution):
-    """File name for Riemann mid-scale accuracy image based on resolution"""
-    return "hex_{}_{}.png".format(resolution, attr.field_name.lower())
-
-
-def get_riemann_fn(riemann_dir, resolution, k=7, observed=True):
-    """File name for Riemann observed/predicted files"""
-    if observed:
-        return "{root}/hex_{res}/hex_{res}_observed_mean.csv".format(
-            root=riemann_dir, res=resolution
-        )
-    return "{root}/hex_{res}/hex_{res}_predicted_k{k}_mean.csv".format(
-        root=riemann_dir, res=resolution, k=k
-    )
-
-
-def create_riemann_figures(riemann_dir, k, attrs):
+class CategoricalAccuracyFormatter(ReportFormatter):
     """
-    Given a set of attributes, create a set of scatterplots across all
-    Riemann resolutions and return the list of filenames
-    """
-    files = []
-    attr_fields = [a.field_name for a in attrs]
-    for resolution in (10, 30, 50):
-        id_field = "HEX_{}_ID".format(resolution)
-        observed_file = get_riemann_fn(riemann_dir, resolution, observed=True)
-        predicted_file = get_riemann_fn(
-            riemann_dir, resolution, k=k, observed=False
-        )
-        merged_df = utilities.build_paired_dataframe_from_files(
-            observed_file, predicted_file, id_field, attr_fields
-        )
-        for attr in attrs:
-            fn = riemann_image_fn(attr, resolution)
-            cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=False)
-            files.append(fn)
-    return files
-
-
-class AttributeAccuracyFormatter(ReportFormatter):
-    """
-    Formatter for a continuous attribute which creates local, regional,
-    and mid-scale graphics for inclusion into a single page
+    Formatter for a categorical attribute which creates a regional-scale
+    graphic and error matrix for inclusion into a single page
     """
 
     def __init__(self, parameter_parser):
@@ -115,7 +57,6 @@ class AttributeAccuracyFormatter(ReportFormatter):
         self.observed_file = parameter_parser.stand_attribute_file
         self.predicted_file = parameter_parser.independent_predicted_file
         self.id_field = parameter_parser.plot_id_field
-        self.riemann_dir = parameter_parser.riemann_output_folder
         self.k = parameter_parser.k
         self.image_files = []
 
@@ -126,24 +67,27 @@ class AttributeAccuracyFormatter(ReportFormatter):
         self.area_df = pd.read_csv(parameter_parser.regional_accuracy_file)
         self.olofsson_df = pd.read_csv(parameter_parser.regional_olofsson_file)
 
+        # TODO: Hack fix - there are a few pixels that have nearest neighbor
+        #   of 0 (missing spatial data in one or more covariates).  This
+        #   makes its way into the area_df and that olofsson_df.  Strip out
+        #   all records with "Unknown"
+        self.area_df = self.area_df[self.area_df.BIN_NAME != "Unknown"]
+        self.olofsson_df = self.olofsson_df[self.olofsson_df.CLASS != "Unknown"]
+
     def run_formatter(self):
         """
         Run formatter for all continuous attributes
         """
         # Read in the stand attribute metadata and get the continuous fields
         metadata_parser = XMLStandMetadataParser(self.stand_metadata_file)
-        attrs = metadata_parser.filter(
-            Flags.CONTINUOUS
-            | Flags.ACCURACY
-            | Flags.PROJECT
-            | Flags.NOT_SPECIES
-        )
+        flags = Flags.CATEGORICAL | Flags.ACCURACY | Flags.PROJECT
+        attrs = metadata_parser.filter(flags)
 
         # Create the figures
         self.create_figures(attrs)
 
-        # Create the introduction to the figures
-        flowables = AccuracyIntroductionFormatter().run_formatter()
+        # Create the introduction
+        flowables = self.introduction()
 
         # Build the individual attribute pages
         for attr in attrs:
@@ -156,36 +100,71 @@ class AttributeAccuracyFormatter(ReportFormatter):
         Create all figures in advance of building page.  Store all filenames
         in the image_files instance attribute.
         """
-        attr_fields = [a.field_name for a in attrs]
-
-        # Create the paired dataframe for the local data
-        merged_df = utilities.build_paired_dataframe_from_files(
-            self.observed_file, self.predicted_file, self.id_field, attr_fields
-        )
-
-        # Create the figures
-        local_figures = create_local_figures(merged_df, attrs)
-        self.image_files.extend(local_figures)
-
         regional_figures = create_regional_figures(
             self.area_df, self.olofsson_df, attrs
         )
         self.image_files.extend(regional_figures)
 
-        riemann_figures = create_riemann_figures(
-            self.riemann_dir, self.k, attrs
+    def introduction(self):
+        flowables = page_break(self.PORTRAIT)
+
+        # Section title
+        title_str = "<strong>Categorical Attribute Accuracy Assessment</strong>"
+        para = Paragraph(title_str, self.styles["section_style"])
+        table = Table([[para]], colWidths=[7.5 * inch])
+        table.setStyle(
+            TableStyle(
+                [
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
         )
-        self.image_files.extend(riemann_figures)
+        flowables.append(table)
+        flowables.append(Spacer(0, 0.1 * inch))
+
+        intro = """
+            As with the continuous attributes, we also present accuracy
+            assessment for a suite of categorical attributes that are
+            distributed with GNN.  For these attributes, we present only
+            the local scale confusion matrices and regional scale area
+            distributions based on FIA plot estimates, GNN-based model
+            predictions and the aforementioned Olofsson et al. (2013) 
+            error-corrected area estimates (see explanation in continuous
+            attribute section.
+            <br/><br/>
+            In contrast to the continuous attributes, plot-based predictions
+            for categorical attributes are constructed from the single
+            nearest neighbor (k=1) at each pixel within the nine pixel
+            footprint and the plot predicted value is calculated as the
+            majority value across those nine neighbors.
+            <br/><br/>
+            For some of these categorical attributes, fuzzy classes may
+            extend past the traditional +/- one class boundaries.  For
+            example, the vegetation class attribute (VEGCLASS) is a synthetic
+            attributes that combines canopy cover, hardwood proportion, and
+            average tree size in a stand.  When considering fuzzy classes,
+            we allow for fuzziness in these three dimensions.  The lighter
+            gray shading on fuzzy classes in the confusion matrix will
+            indicate these choices.  Users are encouraged to carefully consider
+            whether these fuzzy classifications are appropriate in their
+            applications.  
+        """
+        flowables.append(Paragraph(intro, self.styles["body_style"]))
+        flowables.append(Spacer(0, 0.15 * inch))
+        return flowables
 
     def build_error_matrix(self, attr):
         """
-        Build a binned error matrix from continuous data
+        Build a binned error matrix from categorical data
         """
         fn = attr.field_name
 
         # Get the subsets of the dataframes associated with this attribute
         em_data = self.error_matrix_df[self.error_matrix_df.VARIABLE == fn]
-        bins = self.bins_df[self.bins_df.VARIABLE == fn]
+        bins = [x.label for x in attr.codes]
 
         # Construct the error matrix and get row/column totals
         cats = np.arange(1, len(bins) + 1)
@@ -210,29 +189,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
         arr[2, 0] = "Observed class"
         arr[0, 2] = "Predicted class"
 
-        # Assign class labels
-        def get_labels(bin_df):
-            def exp_range(low, high):
-                def _exp(x):
-                    base, exponent = "{:.1e}".format(x).split("e")
-                    return "{:.1f}e{:d}".format(float(base), int(exponent))
-
-                return "{}-{}".format(_exp(low), _exp(high))
-
-            def reg_range(low, high):
-                def _reg(x):
-                    return "{:.1f}".format(x)
-
-                return "{}-{}".format(_reg(low), _reg(high))
-
-            func = exp_range if bin_df.HIGH.max() > 1000.0 else reg_range
-            return [
-                func(low, high) for low, high in zip(bin_df.LOW, bin_df.HIGH)
-            ]
-
-        bin_labels = np.array(
-            get_labels(bins) + ["Total", "% correct", "% fuzzy correct"]
-        )
+        bin_labels = np.array(bins + ["Total", "% correct", "% fuzzy correct"])
         arr[1, 2:] = bin_labels
         arr[2:, 1] = bin_labels.transpose()
 
@@ -251,15 +208,43 @@ class AttributeAccuracyFormatter(ReportFormatter):
         arr[-2, -2] = diag.sum() / row_sums.sum() * 100.0
 
         # Calculate row/column/total percent fuzzy correct
+        # Also store row/column indices of fuzzy cells for later formatting
         classifiers = {}
-        for i in range(len(diag)):
-            if i == 0:
-                classification = Classification(i, f"{i}", [i, i + 1])
-            elif i == len(diag) - 1:
-                classification = Classification(i, f"{i}", [i - 1, i])
-            else:
-                classification = Classification(i, f"{i}", [i - 1, i, i + 1])
-            classifiers[i] = classification
+        fuzzy_cells = []
+        if len(attr.fuzzy_classes) > 0:
+            # Because codes are not necessarily contiguous but they are
+            # ordered, create a lookup of unique codes to index
+            codes = {x.original_class for x in attr.fuzzy_classes}
+            xwalk = {c: i for i, c in enumerate(list(codes))}
+
+            # Set the fuzzy classes, translating codes through xwalk
+            d = defaultdict(list)
+            for elem in attr.fuzzy_classes:
+                orig, fuzzy = (
+                    xwalk[elem.original_class],
+                    xwalk[elem.fuzzy_class],
+                )
+                d[orig].append(fuzzy)
+                if orig != fuzzy:
+                    fuzzy_cells.append((orig, fuzzy))
+            for k, v in d.items():
+                classifiers[k] = Classification(k, f"{k}", v)
+        else:
+            for i in range(len(diag)):
+                if i == 0:
+                    classification = Classification(i, f"{i}", [i, i + 1])
+                    fuzzy_cells.append((i, i + 1))
+                elif i == len(diag) - 1:
+                    classification = Classification(i, f"{i}", [i - 1, i])
+                    fuzzy_cells.append((i, i - 1))
+                else:
+                    classification = Classification(
+                        i, f"{i}", [i - 1, i, i + 1]
+                    )
+                    fuzzy_cells.append((i, i - 1))
+                    fuzzy_cells.append((i, i + 1))
+                classifiers[i] = classification
+
         clf = Classifier(classifiers)
         incorrect = 0
         em_data = err_matrix[:-1, :-1]
@@ -335,26 +320,18 @@ class AttributeAccuracyFormatter(ReportFormatter):
         def format_table(data):
             n_rows, n_cols = data.shape
 
-            total_width = 4.10 * inch
+            width_available = 7.5 * inch
             obs_label = 0.25 * inch
-            horiz_labels = 0.80 * inch
-            percent_labels = 0.35 * inch
-            available = total_width - (
-                obs_label + horiz_labels + 2 * percent_labels
-            )
-            standard = available / (n_cols - 4)
-            widths = (
-                [obs_label]
-                + [horiz_labels]
-                + [standard] * (n_cols - 5)
-                + [percent_labels] * 2
-            )
+            horiz_labels = 1.20 * inch
+            available = width_available - (obs_label + horiz_labels)
+            standard = min(0.5 * inch, available / (n_cols - 2))
+            widths = [obs_label] + [horiz_labels] + [standard] * (n_cols - 2)
 
-            total_height = 3.2 * inch
+            height_available = 5.0 * inch
             prd_label = 0.25 * inch
-            vert_labels = 0.8 * inch
-            available = total_height - (prd_label + vert_labels)
-            standard = available / (n_rows - 2)
+            vert_labels = 1.20 * inch
+            available = height_available - (prd_label + vert_labels)
+            standard = min(0.5 * inch, available / (n_rows - 2))
             heights = [prd_label] + [vert_labels] + [standard] * (n_rows - 2)
 
             return Table(data.tolist(), colWidths=widths, rowHeights=heights)
@@ -391,13 +368,10 @@ class AttributeAccuracyFormatter(ReportFormatter):
             )
 
         # Shading on fuzzy correct cells
-        for i in range(2, len(diag) + 1):
-            table.setStyle(
-                TableStyle([("BACKGROUND", (i, i + 1), (i, i + 1), "#dddddd")])
-            )
-            table.setStyle(
-                TableStyle([("BACKGROUND", (i + 1, i), (i + 1, i), "#dddddd")])
-            )
+        offset = 2
+        for cell in fuzzy_cells:
+            cell = (cell[0] + offset, cell[1] + offset)
+            table.setStyle(TableStyle([("BACKGROUND", cell, cell, "#dddddd")]))
 
         return table
 
@@ -417,11 +391,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
         error_matrix = self.build_error_matrix(attr)
 
         # Get the image files
-        scatter_fn = local_image_fn(attr)
         regional_fn = regional_image_fn(attr)
-        riemann_10_fn = riemann_image_fn(attr, 10)
-        riemann_30_fn = riemann_image_fn(attr, 30)
-        riemann_50_fn = riemann_image_fn(attr, 50)
 
         title = attr.field_name + " (units: " + attr.units + ")"
         table_style = [
@@ -443,48 +413,10 @@ class AttributeAccuracyFormatter(ReportFormatter):
             Spacer(1, 0.2 * inch),
             Paragraph("Local Accuracy", default_style),
             Spacer(1, 0.17 * inch),
-            Table(
-                [
-                    [
-                        Image(scatter_fn, width=3.2 * inch, height=3.2 * inch),
-                        error_matrix,
-                    ]
-                ],
-                style=table_style,
-                hAlign="LEFT",
-            ),
+            error_matrix,
             Spacer(1, 0.10 * inch),
             Paragraph("Regional Accuracy", default_style),
             Spacer(1, 0.17 * inch),
             Image(regional_fn, width=7.5 * inch, height=2.5 * inch),
             Spacer(1, 0.10 * inch),
-            Paragraph("Accuracy Across Scales", default_style),
-            Spacer(1, 0.17 * inch),
-            Table(
-                [
-                    [
-                        Image(
-                            riemann_10_fn, width=2.4 * inch, height=2.4 * inch
-                        ),
-                        Image(
-                            riemann_30_fn, width=2.4 * inch, height=2.4 * inch
-                        ),
-                        Image(
-                            riemann_50_fn, width=2.4 * inch, height=2.4 * inch
-                        ),
-                    ],
-                    [
-                        Spacer(1, 0.05 * inch),
-                        Spacer(1, 0.05 * inch),
-                        Spacer(1, 0.05 * inch),
-                    ],
-                    [
-                        Paragraph("8,660 ha hexagons", subheading_style),
-                        Paragraph("78,100 ha hexagons", subheading_style),
-                        Paragraph("216,5000 ha hexagons", subheading_style),
-                    ],
-                ],
-                style=table_style,
-                hAlign="LEFT",
-            ),
         ]
