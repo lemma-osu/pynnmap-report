@@ -31,29 +31,14 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         Run this formatter for all species attributes
         """
         # Set up an empty list to hold the story
-        story = []
-
-        # Create a page break
-        story.extend(page_break(self.PORTRAIT))
+        story = page_break(self.PORTRAIT)
 
         # Section title
-        title_str = "<strong>Local-Scale Accuracy Assessment:<br/>"
-        title_str += "Species Accuracy at Plot Locations"
-        title_str += "</strong>"
-        para = p.Paragraph(title_str, self.styles["section_style"])
-        table = p.Table([[para]], colWidths=[7.5 * u.inch])
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
+        title = (
+            "Local-Scale Accuracy Assessment:\n"
+            "Species Accuracy at Plot Locations"
         )
-        story.append(table)
-        story.append(p.Spacer(0, 0.2 * u.inch))
+        story.extend(self.create_section_title(title))
 
         # Kappa explanation
         kappa_str = (
@@ -123,7 +108,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             ],
         ]
         table = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-        table.setStyle(self.table_styles["default_table_style"])
+        table.setStyle(self.table_styles["default_shaded"])
         header_row.append(table)
 
         kappa_str = "<strong>Kappa coefficient</strong>"
@@ -199,7 +184,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             table = p.Table(
                 count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch]
             )
-            table.setStyle(self.table_styles["default_table_style"])
+            table.setStyle(self.table_styles["default_shaded"])
             species_row.append(table)
 
             # Print out the kappa statistic
@@ -213,41 +198,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         # Style this into a reportlab table and add to the story
         col_widths = [(x * u.inch) for x in [4.0, 1.0, 1.5, 1.0]]
         table = p.Table(species_table, colWidths=col_widths)
-        table.setStyle(
-            p.TableStyle(
-                [
-                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
-                    ("GRID", (0, 0), (-1, -1), 2, colors.white),
-                    ("TOPPADDING", (0, 0), (0, -1), 2),
-                    ("BOTTOMPADDING", (0, 0), (0, -1), 2),
-                    ("LEFTPADDING", (0, 0), (0, -1), 6),
-                    ("RIGHTPADDING", (0, 0), (0, -1), 6),
-                    ("ALIGNMENT", (0, 0), (0, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (0, -1), "TOP"),
-                    ("TOPPADDING", (1, 0), (1, -1), 2),
-                    ("BOTTOMPADDING", (1, 0), (1, -1), 2),
-                    ("LEFTPADDING", (1, 0), (1, -1), 6),
-                    ("RIGHTPADDING", (1, 0), (1, -1), 6),
-                    ("ALIGNMENT", (1, 0), (1, -1), "RIGHT"),
-                    ("VALIGN", (1, 0), (1, 0), "TOP"),
-                    ("VALIGN", (1, 1), (1, -1), "MIDDLE"),
-                    ("TOPPADDING", (2, 0), (2, -1), 0),
-                    ("BOTTOMPADDING", (2, 0), (2, -1), 0),
-                    ("LEFTPADDING", (2, 0), (2, -1), 0),
-                    ("RIGHTPADDING", (2, 0), (2, -1), 0),
-                    ("ALIGNMENT", (2, 0), (2, -1), "LEFT"),
-                    ("VALIGN", (2, 0), (2, -1), "TOP"),
-                    ("TOPPADDING", (3, 0), (3, -1), 2),
-                    ("BOTTOMPADDING", (3, 0), (3, -1), 2),
-                    ("LEFTPADDING", (3, 0), (3, -1), 6),
-                    ("RIGHTPADDING", (3, 0), (3, -1), 6),
-                    ("ALIGNMENT", (3, 0), (3, -1), "RIGHT"),
-                    ("VALIGN", (3, 0), (3, 0), "TOP"),
-                    ("VALIGN", (3, 1), (3, -1), "MIDDLE"),
-                ]
-            )
-        )
+        table.setStyle(self.table_styles["species_accuracy"])
         story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
 

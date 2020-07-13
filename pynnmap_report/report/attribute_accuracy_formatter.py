@@ -2,10 +2,10 @@
 Accuracy formatter for all information in a single page
 """
 import os
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-from reportlab.lib.colors import black, white
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     Image,
@@ -13,7 +13,6 @@ from reportlab.platypus import (
     Paragraph,
     Spacer,
     Table,
-    TableStyle,
 )
 
 from pynnmap.misc import utilities
@@ -333,72 +332,50 @@ class AttributeAccuracyFormatter(ReportFormatter):
         arr[0, 2] = to_paragraph(arr[0, 2], em_style_center)
 
         def format_table(data):
+            def get_spacing(
+                total_spacing,
+                n_elem,
+                label_spacing=0.25 * inch,
+                names_spacing=0.80 * inch,
+                percent_spacing=None,
+            ):
+                # If percent_spacing is None, use standard widths for all
+                # rows/columns other than first two; otherwise set the last
+                # three rows/columns to percent_spacing
+                if percent_spacing is None:
+                    available = total_spacing - (label_spacing + names_spacing)
+                    standard = available / (n_elem - 2)
+                    percent_spacing = standard
+                else:
+                    available = total_spacing - (
+                        label_spacing + names_spacing + 3 * percent_spacing
+                    )
+                    standard = available / (n_elem - 5)
+                return (
+                    [label_spacing]
+                    + [names_spacing]
+                    + [standard] * (n_elem - 5)
+                    + [percent_spacing] * 3
+                )
+
             n_rows, n_cols = data.shape
-
-            total_width = 4.10 * inch
-            obs_label = 0.25 * inch
-            horiz_labels = 0.80 * inch
-            percent_labels = 0.35 * inch
-            available = total_width - (
-                obs_label + horiz_labels + 2 * percent_labels
+            widths = get_spacing(
+                4.10 * inch, n_cols, percent_spacing=0.35 * inch
             )
-            standard = available / (n_cols - 4)
-            widths = (
-                [obs_label]
-                + [horiz_labels]
-                + [standard] * (n_cols - 5)
-                + [percent_labels] * 2
-            )
-
-            total_height = 3.2 * inch
-            prd_label = 0.25 * inch
-            vert_labels = 0.8 * inch
-            available = total_height - (prd_label + vert_labels)
-            standard = available / (n_rows - 2)
-            heights = [prd_label] + [vert_labels] + [standard] * (n_rows - 2)
-
+            heights = get_spacing(3.20 * inch, n_rows)
             return Table(data.tolist(), colWidths=widths, rowHeights=heights)
 
         table = format_table(arr)
-        table.setStyle(
-            TableStyle(
-                [
-                    ("SPAN", (0, 0), (1, 1)),
-                    ("SPAN", (0, 2), (0, -1)),
-                    ("SPAN", (2, 0), (-1, 0)),
-                    ("BACKGROUND", (0, 0), (-1, -1), white),
-                    ("GRID", (0, 0), (-1, -1), 1, "#cccccc"),
-                    ("TOPPADDING", (0, 0), (-1, -1), 2),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 2),
-                    ("FONTSIZE", (0, 0), (-1, -1), 7),
-                    ("BOX", (0, 0), (-1, -1), 1.25, black),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("ALIGNMENT", (1, 0), (-1, 0), "CENTER"),
-                    ("ALIGNMENT", (2, 1), (-1, 1), "CENTER"),
-                    ("VALIGN", (0, 2), (-1, -1), "CENTER"),
-                    ("VALIGN", (2, 1), (-1, 1), "BOTTOM"),
-                    ("BOTTOMPADDING", (0, 1), (-1, -1), 2),
-                    ("BOTTOMPADDING", (0, 0), (-1, 1), 4),
-                ]
-            )
-        )
 
-        # Shading on correct cells
+        # Bring in the table style and add correct and fuzzy shading based
+        # on this attribute's values
+        ts = deepcopy(self.table_styles["error_matrix"])
         for i in range(2, len(diag) + 2):
-            table.setStyle(
-                TableStyle([("BACKGROUND", (i, i), (i, i), "#aaaaaa")])
-            )
-
-        # Shading on fuzzy correct cells
+            ts.add("BACKGROUND", (i, i), (i, i), "#aaaaaa")
         for i in range(2, len(diag) + 1):
-            table.setStyle(
-                TableStyle([("BACKGROUND", (i, i + 1), (i, i + 1), "#dddddd")])
-            )
-            table.setStyle(
-                TableStyle([("BACKGROUND", (i + 1, i), (i + 1, i), "#dddddd")])
-            )
-
+            ts.add("BACKGROUND", (i, i + 1), (i, i + 1), "#dddddd")
+            ts.add("BACKGROUND", (i + 1, i), (i + 1, i), "#dddddd")
+        table.setStyle(ts)
         return table
 
     def clean_up(self):
@@ -424,13 +401,6 @@ class AttributeAccuracyFormatter(ReportFormatter):
         riemann_50_fn = riemann_image_fn(attr, 50)
 
         title = attr.field_name + " (units: " + attr.units + ")"
-        table_style = [
-            ("LEFTPADDING", (0, 0), (0, 0), 0),
-            ("TOPPADDING", (0, 0), (-1, -1), 0),
-            ("RIGHTPADDING", (-1, -1), (-1, -1), 0),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-        ]
         default_style = self.styles["body_11"]
         title_style = self.styles["body_16"]
         subheading_style = self.styles["subheading"]
@@ -450,7 +420,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
                         error_matrix,
                     ]
                 ],
-                style=table_style,
+                style=self.table_styles["no_padding"],
                 hAlign="LEFT",
             ),
             Spacer(1, 0.10 * inch),
@@ -484,7 +454,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
                         Paragraph("216,5000 ha hexagons", subheading_style),
                     ],
                 ],
-                style=table_style,
+                style=self.table_styles["no_padding"],
                 hAlign="LEFT",
             ),
         ]

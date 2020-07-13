@@ -4,7 +4,6 @@ from reportlab.platypus import (
     Paragraph,
     Spacer,
     Table,
-    TableStyle,
 )
 
 from .report_formatter import ReportFormatter, page_break
@@ -29,21 +28,8 @@ class AccuracyIntroductionFormatter(ReportFormatter):
         flowables = page_break(self.PORTRAIT)
 
         # Section title
-        title_str = "<strong>Continuous Attribute Accuracy Assessment</strong>"
-        para = Paragraph(title_str, self.styles["section_style"])
-        table = Table([[para]], colWidths=[7.5 * inch])
-        table.setStyle(
-            TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        flowables.append(table)
-        flowables.append(Spacer(0, 0.1 * inch))
+        title = "Continuous Attribute Accuracy Assessment"
+        flowables.extend(self.create_section_title(title))
 
         intro = """
             On the following pages, we present accuracy assessment for
@@ -113,7 +99,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
                             ),
                         ]
                     ],
-                    style=self.table_styles["default_table_style"],
+                    style=self.table_styles["default"],
                     hAlign="LEFT",
                 ),
             ]

@@ -26,27 +26,6 @@ def page_break(orientation):
     ]
 
 
-def make_title(title_str):
-    """
-    Render the specified title as a Platypus table
-    """
-    para = p.Paragraph(title_str, STYLES["section_style"])
-    table = p.Table([[para]], colWidths=[7.5 * u.inch])
-    table.setStyle(
-        p.TableStyle(
-            [
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                ("BACKGROUND", (0, 0), (-1, -1), "#957348"),
-                ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("GRID", (0, 0), (-1, -1), 0.25, colors.black),
-            ]
-        )
-    )
-    return table
-
-
 def make_figure_table(image_files):
     """
     Create a table of images from existing image files
@@ -89,6 +68,7 @@ def txt_to_html(in_str):
     replace_list = {
         ">": "&gt;",
         "<": "&lt;",
+        "\n": "<br/>",
     }
     for i in replace_list:
         in_str = re.sub(i, replace_list[i], in_str)
@@ -122,6 +102,18 @@ class ReportFormatter:
         except utilities.MissingConstraintError as err:
             err.message += "\nSkipping {}\n".format(self.__class__.__name__)
             raise err
+
+    def create_section_title(self, title_str):
+        title_str = txt_to_html(title_str)
+        title_str = f"<strong>{title_str}</strong>"
+        return [
+            p.Table(
+                [[p.Paragraph(title_str, self.styles["section_style"])]],
+                colWidths=[7.5 * u.inch],
+                style=self.table_styles["title"],
+            ),
+            p.Spacer(0, 0.1 * u.inch),
+        ]
 
     def clean_up(self):
         """

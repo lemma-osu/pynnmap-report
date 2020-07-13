@@ -2,7 +2,6 @@
 Formatter for listing the attribute data dictionary
 """
 from reportlab import platypus as p
-from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
@@ -35,21 +34,8 @@ class DataDictionaryFormatter(ReportFormatter):
         story.extend(page_break(self.PORTRAIT))
 
         # Section title
-        title_str = "<strong>Data Dictionary</strong>"
-        para = p.Paragraph(title_str, self.styles["section_style"])
-        table = p.Table([[para]], colWidths=[7.5 * u.inch])
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        story.append(table)
-        story.append(p.Spacer(0, 0.1 * u.inch))
+        title = "Data Dictionary"
+        story.extend(self.create_section_title(title))
 
         # Read in the stand attribute metadata
         metadata_parser = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -101,21 +87,9 @@ class DataDictionaryFormatter(ReportFormatter):
 
                 # Convert this to a reportlab table
                 table = p.Table(
-                    code_table, colWidths=[0.75 * u.inch, 4.5 * u.inch]
+                    code_table, colWidths=[0.75 * u.inch, 4.75 * u.inch]
                 )
-                table.setStyle(
-                    p.TableStyle(
-                        [
-                            ("TOPPADDING", (0, 0), (-1, -1), 3),
-                            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                            # ("BACKGROUND", (0, 0), (-1, -1), "#f7f7ea"),
-                            ("BACKGROUND", (0, 0), (-1, -1), "#f8f8f8"),
-                            ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                            ("GRID", (0, 0), (-1, -1), 0.25, colors.white),
-                        ]
-                    )
-                )
+                table.setStyle(self.table_styles["code_table"])
 
                 # Create a stack of the field description and field codes
                 elements = [[field_desc_para], [table]]
@@ -126,39 +100,15 @@ class DataDictionaryFormatter(ReportFormatter):
 
             # Create a reportlab table of the field description and
             # (if present) field codes
-            description_table = p.Table(elements, colWidths=[5.25 * u.inch])
-            description_table.setStyle(
-                p.TableStyle(
-                    [
-                        ("TOPPADDING", (0, 0), (-1, 0), 0),
-                        ("BOTTOMPADDING", (0, -1), (-1, -1), 0),
-                        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-                        ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ]
-                )
-            )
-
+            description_table = p.Table(elements, colWidths=[5.5 * u.inch])
+            description_table.setStyle(self.table_styles["description_table"])
             dictionary_table.append([field_para, description_table])
 
         # Format the dictionary table into a reportlab table
         table = p.Table(
-            dictionary_table, colWidths=[1.6 * u.inch, 5.4 * u.inch]
+            dictionary_table, colWidths=[1.85 * u.inch, 5.65 * u.inch]
         )
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (0, -1), 5),
-                    ("BOTTOMPADDING", (0, 0), (0, -1), 5),
-                    ("GRID", (0, 0), (-1, -1), 1, colors.white),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
-                ]
-            )
-        )
+        table.setStyle(self.table_styles["data_dictionary"])
         story.append(table)
 
         # Description of the species information that is attached to ArcInfo

@@ -3,10 +3,10 @@ Categorical accuracy formatter showing a subset of the information
 """
 import os
 from collections import defaultdict
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-from reportlab.lib.colors import black, white
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     Image,
@@ -14,7 +14,6 @@ from reportlab.platypus import (
     Paragraph,
     Spacer,
     Table,
-    TableStyle,
 )
 
 from pynnmap.misc.classification_accuracy import Classifier, Classification
@@ -109,21 +108,8 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         flowables = page_break(self.PORTRAIT)
 
         # Section title
-        title_str = "<strong>Categorical Attribute Accuracy Assessment</strong>"
-        para = Paragraph(title_str, self.styles["section_style"])
-        table = Table([[para]], colWidths=[7.5 * inch])
-        table.setStyle(
-            TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        flowables.append(table)
-        flowables.append(Spacer(0, 0.1 * inch))
+        title = "Categorical Attribute Accuracy Assessment"
+        flowables.extend(self.create_section_title(title))
 
         intro = """
             As with the continuous attributes, we also present accuracy
@@ -318,61 +304,36 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         arr[0, 2] = to_paragraph(arr[0, 2], em_style_center)
 
         def format_table(data):
+            def get_spacing(
+                total_spacing,
+                n_elem,
+                label_spacing=0.25 * inch,
+                names_spacing=1.20 * inch,
+            ):
+                available = total_spacing - (label_spacing + names_spacing)
+                standard = min(0.5 * inch, available / (n_elem - 2))
+                return (
+                    [label_spacing]
+                    + [names_spacing]
+                    + [standard] * (n_elem - 2)
+                )
+
             n_rows, n_cols = data.shape
-
-            width_available = 7.5 * inch
-            obs_label = 0.25 * inch
-            horiz_labels = 1.20 * inch
-            available = width_available - (obs_label + horiz_labels)
-            standard = min(0.5 * inch, available / (n_cols - 2))
-            widths = [obs_label] + [horiz_labels] + [standard] * (n_cols - 2)
-
-            height_available = 5.0 * inch
-            prd_label = 0.25 * inch
-            vert_labels = 1.20 * inch
-            available = height_available - (prd_label + vert_labels)
-            standard = min(0.5 * inch, available / (n_rows - 2))
-            heights = [prd_label] + [vert_labels] + [standard] * (n_rows - 2)
-
+            widths = get_spacing(7.5 * inch, n_cols)
+            heights = get_spacing(5.0 * inch, n_rows)
             return Table(data.tolist(), colWidths=widths, rowHeights=heights)
 
         table = format_table(arr)
-        table.setStyle(
-            TableStyle(
-                [
-                    ("SPAN", (0, 0), (1, 1)),
-                    ("SPAN", (0, 2), (0, -1)),
-                    ("SPAN", (2, 0), (-1, 0)),
-                    ("BACKGROUND", (0, 0), (-1, -1), white),
-                    ("GRID", (0, 0), (-1, -1), 1, "#cccccc"),
-                    ("TOPPADDING", (0, 0), (-1, -1), 2),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 2),
-                    ("FONTSIZE", (0, 0), (-1, -1), 7),
-                    ("BOX", (0, 0), (-1, -1), 1.25, black),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("ALIGNMENT", (1, 0), (-1, 0), "CENTER"),
-                    ("ALIGNMENT", (2, 1), (-1, 1), "CENTER"),
-                    ("VALIGN", (0, 2), (-1, -1), "CENTER"),
-                    ("VALIGN", (2, 1), (-1, 1), "BOTTOM"),
-                    ("BOTTOMPADDING", (0, 1), (-1, -1), 2),
-                    ("BOTTOMPADDING", (0, 0), (-1, 1), 4),
-                ]
-            )
-        )
 
-        # Shading on correct cells
+        # Bring in the table style and add correct and fuzzy shading based
+        # on this attribute's values
+        ts = deepcopy(self.table_styles["error_matrix"])
         for i in range(2, len(diag) + 2):
-            table.setStyle(
-                TableStyle([("BACKGROUND", (i, i), (i, i), "#aaaaaa")])
-            )
-
-        # Shading on fuzzy correct cells
-        offset = 2
-        for cell in fuzzy_cells:
-            cell = (cell[0] + offset, cell[1] + offset)
-            table.setStyle(TableStyle([("BACKGROUND", cell, cell, "#dddddd")]))
-
+            ts.add("BACKGROUND", (i, i), (i, i), "#aaaaaa")
+        for c, r in fuzzy_cells:
+            cell = (c + 2, r + 2)
+            ts.add("BACKGROUND", cell, cell, "#dddddd")
+        table.setStyle(ts)
         return table
 
     def clean_up(self):

@@ -6,7 +6,6 @@ import locale
 from datetime import datetime
 
 from reportlab import platypus as p
-from reportlab.lib import colors
 from reportlab.lib import units as u
 
 from pynnmap.parser import xml_report_metadata_parser as xrmp
@@ -126,21 +125,7 @@ class IntroductionFormatter(ReportFormatter):
                 contact_table.append(contact_row)
                 contact_row = []
         table = p.Table(contact_table)
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (-1, -1), 4),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("GRID", (0, 0), (-1, -1), 1.0, colors.white),
-                ]
-            )
-        )
+        table.setStyle(self.table_styles["contacts"])
         return [
             p.Paragraph("Contact Information:", self.styles["heading_style"]),
             p.Spacer(0.0, 0.1 * u.inch),
@@ -275,7 +260,7 @@ class IntroductionFormatter(ReportFormatter):
             plot_count_table.append(flowable)
 
         table = p.Table(plot_count_table)
-        table.setStyle(self.table_styles["default_table_style"])
+        table.setStyle(self.table_styles["default_shaded"])
 
         return (
             plot_count,
@@ -348,39 +333,7 @@ class IntroductionFormatter(ReportFormatter):
             plot_table, colWidths=[1.5 * u.inch, 4.2 * u.inch, 1.5 * u.inch]
         )
         table.hAlign = "LEFT"
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("GRID", (0, 0), (-1, -2), 1.5, colors.white),
-                    ("BOX", (0, -1), (-1, -1), 1.5, colors.white),
-                    ("LINEAFTER", (1, -1), (1, -1), 1.5, colors.white),
-                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("TOPPADDING", (0, 0), (1, -2), 2),
-                    ("BOTTOMPADDING", (0, 0), (1, -2), 2),
-                    ("LEFTPADDING", (0, 0), (1, -2), 6),
-                    ("RIGHTPADDING", (0, 0), (1, -2), 6),
-                    ("ALIGNMENT", (0, 0), (1, -2), "LEFT"),
-                    ("TOPPADDING", (2, 0), (2, 0), 2),
-                    ("BOTTOMPADDING", (2, 0), (2, 0), 2),
-                    ("LEFTPADDING", (2, 0), (2, 0), 6),
-                    ("RIGHTPADDING", (2, 0), (2, 0), 6),
-                    ("ALIGNMENT", (2, 0), (2, 0), "LEFT"),
-                    ("TOPPADDING", (2, 1), (2, -2), 0),
-                    ("BOTTOMPADDING", (2, 1), (2, -2), 0),
-                    ("LEFTPADDING", (2, 1), (2, -2), 0),
-                    ("RIGHTPADDING", (2, 1), (2, -2), 0),
-                    ("ALIGNMENT", (2, 1), (2, -2), "LEFT"),
-                    ("TOPPADDING", (0, -1), (2, -1), 4),
-                    ("BOTTOMPADDING", (0, -1), (2, -1), 4),
-                    ("LEFTPADDING", (0, -1), (2, -1), 6),
-                    ("RIGHTPADDING", (0, -1), (2, -1), 6),
-                    ("ALIGNMENT", (0, -1), (2, -1), "RIGHT"),
-                ]
-            )
-        )
-
+        table.setStyle(self.table_styles["plot_listing"])
         return [
             p.Paragraph(
                 "<strong>Inventory Plots in Model Development</strong>",
@@ -432,17 +385,7 @@ class IntroductionFormatter(ReportFormatter):
             colWidths=[1.0 * u.inch, 2.4 * u.inch, 3.8 * u.inch],
         )
         table.hAlign = "LEFT"
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("GRID", (0, 0), (-1, -1), 1.5, colors.white),
-                    # ("BACKGROUND", (0, 0), (-1, -1), "#f1efe4"),
-                    ("BACKGROUND", (0, 0), (-1, -1), "#efefef"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-
+        table.setStyle(self.table_styles["default_shaded"])
         return [
             p.Paragraph(
                 "Spatial Predictor Variables in Model Development",

@@ -5,7 +5,7 @@ from reportlab import platypus as p
 from reportlab.lib import units as u
 
 from . import report_formatter
-from .report_formatter import page_break, make_title
+from .report_formatter import page_break
 
 
 class ReferencesFormatter(report_formatter.ReportFormatter):
@@ -25,21 +25,8 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
         story.extend(page_break(self.PORTRAIT))
 
         # Section title
-        title_str = "<strong>References</strong>"
-        para = p.Paragraph(title_str, self.styles["section_style"])
-        table = p.Table([[para]], colWidths=[7.5 * u.inch])
-        table.setStyle(
-            p.TableStyle(
-                [
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                    ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        story.append(table)
-        story.append(p.Spacer(0, 0.1 * u.inch))
+        title = "References"
+        story.extend(self.create_section_title(title))
 
         # List of references used
         references = [
