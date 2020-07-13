@@ -11,6 +11,7 @@ from reportlab.lib import units as u
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 
 from .. import LEMMA_LOGO
+from .config import GNN_RELEASE_VERSION
 from .report_formatter import ReportFormatter, page_break
 
 
@@ -62,6 +63,10 @@ class IntroductionFormatter(ReportFormatter):
                         "Model Type: {}".format(
                             model_type_dict[self.model_type]
                         ),
+                        self.styles["sub_title_style"],
+                    ),
+                    p.Paragraph(
+                        "Release Version: {}".format(GNN_RELEASE_VERSION),
                         self.styles["sub_title_style"],
                     ),
                 ],

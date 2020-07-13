@@ -3,6 +3,8 @@ Specialized configuration parameters
 """
 import os
 
+GNN_RELEASE_VERSION = "2020.1"
+
 
 class FontConfig:  # pylint: disable=too-few-public-methods
     """
