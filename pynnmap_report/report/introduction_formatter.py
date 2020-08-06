@@ -166,11 +166,22 @@ class IntroductionFormatter(ReportFormatter):
         locale.setlocale(locale.LC_ALL, "")
         mr_area_ha = rmp.model_region_area
         mr_area_ac = mr_area_ha * self.ACRES_PER_HECTARE
-        area_str = (
+        mr_area_str = (
             "<strong>Model Region Area:</strong> {} hectares ({} acres)"
         ).format(
             locale.format("%d", mr_area_ha, True),
             locale.format("%d", mr_area_ac, True),
+        )
+
+        # Forest area
+        forest_area_ha = rmp.forest_area
+        forest_area_ac = forest_area_ha * self.ACRES_PER_HECTARE
+        forest_area_str = (
+            "<strong>Forest Area:</strong> {} hectares ({} acres) - {:.1f}%"
+        ).format(
+            locale.format("%d", forest_area_ha, True),
+            locale.format("%d", forest_area_ac, True),
+            forest_area_ha / mr_area_ha * 100.0,
         )
 
         # Model imagery date
@@ -183,7 +194,9 @@ class IntroductionFormatter(ReportFormatter):
             p.Spacer(0, 0.1 * u.inch),
             p.Paragraph(time_str, self.styles["body_style"]),
             p.Spacer(0, 0.1 * u.inch),
-            p.Paragraph(area_str, self.styles["body_style"]),
+            p.Paragraph(mr_area_str, self.styles["body_style"]),
+            p.Spacer(0, 0.1 * u.inch),
+            p.Paragraph(forest_area_str, self.styles["body_style"]),
             p.Spacer(0, 0.1 * u.inch),
             p.Paragraph(mr_imagery_str, self.styles["body_style"]),
             p.Spacer(0, 0.1 * u.inch),

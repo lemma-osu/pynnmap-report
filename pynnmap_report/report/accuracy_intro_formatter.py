@@ -52,7 +52,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             included in model development.  Observed values come directly from
             the FIA plot data and are calculated across all forested conditions
             on a plot.  Predicted values are calculated from a modified
-            leave-one-out (LOO) technique.  Using a 90-m x 90-m area centered
+            leave-one-out technique.  Using a 90-m x 90-m area centered
             on the plot location, we calculate predictions for each of the
             nine 30-m pixels.  Although all plots are used in model development,
             we restrict the prediction to come only from independent neighbors -
@@ -80,7 +80,9 @@ class AccuracyIntroductionFormatter(ReportFormatter):
         """
         flowables.extend(
             [
-                Paragraph("Local Scale Accuracy", self.styles["heading_style"]),
+                Paragraph(
+                    "Local (Plot) Scale Accuracy", self.styles["heading_style"]
+                ),
                 Spacer(0, 0.15 * inch),
                 Paragraph(local_str, self.styles["body_style"]),
                 Spacer(0, 0.15 * inch),
@@ -185,6 +187,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             design-based estimates (plots) and model-based estimates (GNN) 
             converge reliably as a function of spatial scale. 
         """
+        subheading_style = self.styles["subheading"]
         flowables.extend(
             [
                 Paragraph(
@@ -212,9 +215,19 @@ class AccuracyIntroductionFormatter(ReportFormatter):
                                 height=2.4 * inch,
                             ),
                         ],
-                    ]
+                        [
+                            Spacer(1, 0.05 * inch),
+                            Spacer(1, 0.05 * inch),
+                            Spacer(1, 0.05 * inch),
+                        ],
+                        [
+                            Paragraph("8,660 ha hexagons", subheading_style),
+                            Paragraph("78,100 ha hexagons", subheading_style),
+                            Paragraph("216,5000 ha hexagons", subheading_style),
+                        ],
+                    ],
+                    style=self.table_styles["no_padding"],
                 ),
-                Spacer(0, 0.15 * inch),
             ]
         )
 
