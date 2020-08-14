@@ -251,6 +251,31 @@ class SeriesGroup:
             )
 
 
+class SeriesGroupLemma(SeriesGroup):
+    def draw(self, axes):
+        super().draw(axes)
+        self.draw_annotations(axes)
+
+    def draw_annotations(self, axes):
+        num = len(self.series)
+        series_width = (self.total_width - (self.spacing * num)) / num
+        first_space = (1.0 - self.total_width) / 2.0 + (self.spacing / 2.0)
+        for series_idx in range(len(self.series)):
+            if self.series[series_idx].err is not None:
+                for x in range(0, 2):
+                    axes.text(
+                        x
+                        + ((series_width + self.spacing) * series_idx)
+                        + first_space
+                        + series_width / 2.0,
+                        0.0,
+                        "*",
+                        ha="center",
+                        va="bottom",
+                        color="k",
+                    )
+
+
 class Legend:
     """
     Legend for series placed in upper right corner
@@ -413,7 +438,7 @@ def draw_histogram(area_df, olofsson_df, attr, output_file="foo.png"):
     error_adjusted = np.hstack(([0.0, 0.0], adjusted_df.ADJUSTED))
     ci_adjusted = np.hstack(([0.0, 0.0], adjusted_df.CI_ADJUSTED))
 
-    series_group = SeriesGroup(
+    series_group = SeriesGroupLemma(
         [
             Series(obs, name="Plots"),
             Series(prd, name="GNN"),
