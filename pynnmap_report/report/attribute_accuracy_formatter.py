@@ -86,6 +86,7 @@ def create_riemann_figures(riemann_dir, k, attrs):
     """
     files = []
     attr_fields = [a.field_name for a in attrs]
+    attr_fields.append("PLOT_COUNT")
     for resolution in (10, 30, 50):
         id_field = "HEX_{}_ID".format(resolution)
         observed_file = get_riemann_fn(riemann_dir, resolution, observed=True)

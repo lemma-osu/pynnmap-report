@@ -134,12 +134,21 @@ class ObservedPredictedScatterplot(Scatterplot):
         _write_statistic(0.05, 0.93, "Correlation coeff.: %.4f" % correlation)
         _write_statistic(0.05, 0.89, "Normalized RMSE: %.4f" % rmse)
         _write_statistic(0.05, 0.85, "R-square: %.4f" % r2)
+        rect_y_min, rect_y_size = 0.84, 0.12
+
+        if "avg_plot_count" in kwargs:
+            _write_statistic(
+                0.05,
+                0.81,
+                "Average plot count: %.4f" % kwargs["avg_plot_count"],
+            )
+            rect_y_min, rect_y_size = 0.80, 0.16
 
         # Set patch to highlight text in case data points obscure it
         rect = patches.Rectangle(
-            (0.04, 0.84),
+            (0.04, rect_y_min),
             0.38,
-            0.12,
+            rect_y_size,
             transform=axes.transAxes,
             facecolor="white",
             edgecolor="none",
@@ -158,6 +167,9 @@ def draw_scatterplot(df, attr, output_file="foo.png", **kwargs):
     obs, prd = df[name + "_O"], df[name + "_P"]
     kwargs["xlabel"] = "Predicted {} ({})".format(name, units)
     kwargs["ylabel"] = "Observed {} ({})".format(name, units)
+
+    if "PLOT_COUNT_O" in df.columns:
+        kwargs["avg_plot_count"] = df["PLOT_COUNT_O"].mean()
 
     ObservedPredictedScatterplot(obs, prd)(**kwargs)
     plt.draw()
