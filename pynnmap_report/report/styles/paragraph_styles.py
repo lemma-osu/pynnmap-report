@@ -212,6 +212,7 @@ def get_open_sans_styles(font_dict):
         name="Title",
         parent=styles["body_style"],
         fontName=bold,
+        textColor="#eeeeee",
         fontSize=18,
         leading=18 * lead_multiplier,
         # leftIndent=1.7 * u.inch,
@@ -228,6 +229,7 @@ def get_open_sans_styles(font_dict):
     styles["section_style"] = ParagraphStyle(
         name="Section",
         parent=styles["title_style"],
+        textColor="black",
         alignment=enums.TA_CENTER,
         leftIndent=0.0,
     )

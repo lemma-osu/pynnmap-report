@@ -21,6 +21,15 @@ def get_table_styles():
         parent=styles["default"],
     )
 
+    styles["dark_shaded"] = TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, -1), "#444444"),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ],
+        parent=styles["default"],
+    )
+
     styles["title"] = TableStyle(
         [
             ("TOPPADDING", (0, 0), (-1, -1), 6),

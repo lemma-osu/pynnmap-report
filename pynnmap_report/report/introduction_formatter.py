@@ -45,33 +45,41 @@ class IntroductionFormatter(ReportFormatter):
             "sppba": "Basal-Area by Species",
         }
         return [
-            p.ImageAndFlowables(
-                p.Image(LEMMA_LOGO, 2.0 * u.inch, 1.96 * u.inch, mask="auto"),
+            p.Table(
                 [
-                    p.Spacer(1, 0.2 * u.inch),
-                    p.Paragraph(
-                        "GNN Accuracy Assessment Report",
-                        self.styles["title_style"],
-                    ),
-                    p.Paragraph(
-                        "{} (Modeling Region {})".format(
-                            rmp.model_region_name, self.model_region
+                    [
+                        p.Image(
+                            LEMMA_LOGO, 2.0 * u.inch, 1.96 * u.inch, mask="auto"
                         ),
-                        self.styles["sub_title_style"],
-                    ),
-                    p.Paragraph(
-                        "Model Type: {}".format(
-                            model_type_dict[self.model_type]
-                        ),
-                        self.styles["sub_title_style"],
-                    ),
-                    p.Paragraph(
-                        "Release Version: {}".format(GNN_RELEASE_VERSION),
-                        self.styles["sub_title_style"],
-                    ),
+                        [
+                            p.Spacer(1, 0.2 * u.inch),
+                            p.Paragraph(
+                                "GNN Accuracy Assessment Report",
+                                self.styles["title_style"],
+                            ),
+                            p.Paragraph(
+                                "{} (Modeling Region {})".format(
+                                    rmp.model_region_name, self.model_region
+                                ),
+                                self.styles["sub_title_style"],
+                            ),
+                            p.Paragraph(
+                                "Model Type: {}".format(
+                                    model_type_dict[self.model_type]
+                                ),
+                                self.styles["sub_title_style"],
+                            ),
+                            p.Paragraph(
+                                "Release Version: {}".format(
+                                    GNN_RELEASE_VERSION
+                                ),
+                                self.styles["sub_title_style"],
+                            ),
+                        ],
+                    ]
                 ],
-                imageSide="left",
-                imageRightPadding=12,
+                style=self.table_styles["dark_shaded"],
+                colWidths=[2.3 * u.inch, 5.2 * u.inch],
             ),
             p.Spacer(0.0, 0.3 * u.inch),
         ]
