@@ -1,6 +1,7 @@
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     Image,
+    ImageAndFlowables,
     Paragraph,
     Spacer,
     Table,
@@ -8,6 +9,7 @@ from reportlab.platypus import (
 
 from .report_formatter import ReportFormatter, page_break
 from .. import (
+    PLOT_DIAGRAM,
     LOCAL_SCATTER,
     ERROR_MATRIX,
     REGIONAL_HISTOGRAM,
@@ -84,7 +86,12 @@ class AccuracyIntroductionFormatter(ReportFormatter):
                     "Local (Plot) Scale Accuracy", self.styles["heading_style"]
                 ),
                 Spacer(0, 0.15 * inch),
-                Paragraph(local_str, self.styles["body_style"]),
+                ImageAndFlowables(
+                    Image(PLOT_DIAGRAM, 2.0 * inch, 1.96 * inch, mask="auto"),
+                    [Paragraph(local_str, self.styles["body_style"])],
+                    imageSide="right",
+                    imageLeftPadding=12,
+                ),
                 Spacer(0, 0.15 * inch),
                 Table(
                     [
