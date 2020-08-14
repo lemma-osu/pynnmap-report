@@ -241,10 +241,12 @@ class IntroductionFormatter(ReportFormatter):
             areas are 'masked' as such using an ancillary map. In California,
             Oregon, Washington and parts of adjacent states, we are using
             maps of Ecological Systems developed for the Gap Analysis
-            Program (GAP) as our nonforest mask. There are 'unmasked'
-            versions of our GNN maps available upon request,
-            in case you have an alternative map of nonforest for your area
-            of interest that you would like to apply to the GNN maps.
+            Program (GAP) as our nonforest mask. For our current GNN rasters,
+            nonforest pixels are designated by the value -1.
+            
+            There are 'unmasked' versions of our GNN maps available upon
+            request, in case you have an alternative map of nonforest for
+            your area of interest that you would like to apply to the GNN maps.
         """
         return [
             p.Paragraph(

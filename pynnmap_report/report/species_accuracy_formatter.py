@@ -40,14 +40,23 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         )
         story.extend(self.create_section_title(title))
 
-        # Kappa explanation
-        kappa_str = (
-            "Cohen's kappa coefficient (Cohen, 1960) is a statistical "
-            "measure of reliability, accounting for agreement occurring by "
-            "chance. The equation for kappa is:"
-        )
-        para = p.Paragraph(kappa_str, self.styles["body_style"])
-        story.append(para)
+        # Species introduction
+        intro_str = """
+            On this page, we present accuracies and kappa coefficients for
+            all tree species that occur on at least 0.5% of observed model
+            plots.  The measure of accuracy is based on species presence or
+            absence.  Observed presence is defined as a given species occurring
+            on the measured plot, whereas predicted presence is defined
+            as the species being predicted on any of the nine pixels in the
+            plot footprint. As such, errors of commission (observed absent
+            and predicted present) tend to be greater than errors of omission
+            (observed present and predicted absent).
+            <br/><br/>
+            Cohen's kappa coefficient (Cohen, 1960) is a statistical measure
+            measure of reliability, accounting for agreement occurring by 
+            chance. The equation for kappa is:
+        """
+        story.append(p.Paragraph(intro_str, self.styles["body_style"]))
         story.append(p.Spacer(0, 0.05 * u.inch))
 
         kappa_str = """
@@ -60,8 +69,8 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         kappa_str = """
             where Pr(a) is the relative observed agreement among
             raters, and Pr(e) is the probability that agreement is
-            due to chance.<br/><br/>
-
+            due to chance.
+            <br/><br/>
             <strong>Abbreviations Used:</strong><br/>
             OP/PP = Observed Present / Predicted Present<br/>
             OA/PP = Observed Absent / Predicted Present
@@ -202,14 +211,6 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
 
-        rare_species_str = """
-            Note that some very rare species do not appear in this accuracy
-            report, because these species were not included when building
-            the initial ordination model.  The full set of species is
-            available upon request.
-        """
-        para = p.Paragraph(rare_species_str, self.styles["body_style"])
-        story.append(para)
 
         # Return this story
         return story

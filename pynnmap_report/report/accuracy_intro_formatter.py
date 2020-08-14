@@ -33,15 +33,15 @@ class AccuracyIntroductionFormatter(ReportFormatter):
 
         intro = """
             On the following pages, we present accuracy assessment for
-            each of the core GNN continuous attributes.  We assess accuracy
+            each of the core GNN continuous attributes.  Core attributes
+            include those most commonly requested by users and represent a
+            broad cross section of forest stand attributes.  We assess accuracy
             at a variety of spatial scales, from the scale of the FIA plots
             that serve as neighbors in GNN modeling to the scale of the full
             modeling region. We have also included accuracy information at
             three intermediate scales based on the assessment protocol
-            detailed in Riemann et al. (2010).
-            <br/><br/>
-            This introduction serves as a key to understanding the diagnostics
-            on the following pages.
+            detailed in Riemann et al. (2010). This introduction serves as a
+            key to understanding the diagnostics on the following pages.
         """
         flowables.append(Paragraph(intro, self.styles["body_style"]))
         flowables.append(Spacer(0, 0.15 * inch))
@@ -53,16 +53,16 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             the FIA plot data and are calculated across all forested conditions
             on a plot.  Predicted values are calculated from a modified
             leave-one-out technique.  Using a 90-m x 90-m area centered
-            on the plot location, we calculate predictions for each of the
-            nine 30-m pixels.  Although all plots are used in model development,
-            we restrict the prediction to come only from independent neighbors -
-            that is a plot may not use itself (nor any co-located plot measured
-            at a different time) in prediction.  For each pixel, we extract the
-            first seven independent candidate neighbors, weight each neighbor
-            based on values that approximate a bootstrapped sample (see Bell
-            et al. (2015) for more information), and calculate the weighted
-            average.  The plot predicted value is calculated as the unweighted
-            average across all nine pixels.
+            on the plot location (see right), we calculate predictions for each
+            of the nine 30-m pixels.  Although all plots are used in model
+            development, we restrict the prediction to come only from
+            independent neighbors - that is a plot may not use itself (nor any
+            co-located plot measured at a different time) in prediction.  For
+            each pixel, we extract the first seven independent candidate
+            neighbors, weight each neighbor based on values that approximate
+            a bootstrapped sample (see Bell et al. (2015) for more information),
+            and calculate the weighted average.  The plot predicted value is
+            calculated as the unweighted average across all nine pixels.
             <br/><br/>
             We include three statistical measures of agreement: the correlation
             coefficient, root mean squared error normalized by the observed
@@ -72,10 +72,10 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             highlight frequent values in the distribution.
             <br/><br/>
             In addition, we present a confusion matrix based on binning the 
-            observed-predicted pairs using a quantile classification.  Both
-            strict and fuzzy class accuracy are displayed, with fuzzy classes
-            defined as +/- one class from the actual class.  Strict classes
-            are shaded as darker gray and fuzzy classes as shaded as
+            observed-predicted pairs using a natural breaks classification.
+            Both strict and fuzzy class accuracy are displayed, with fuzzy
+            classes defined as +/- one class from the actual class.  Strict
+            classes are shaded as darker gray and fuzzy classes as shaded as
             lighter gray.
         """
         flowables.extend(
@@ -112,7 +112,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             For regional scale accuracy assessment, we compare forest area
             using three different methods.  First, a design-based sample from
             the FIA plots is used to estimate nonforest area and forested
-            area of the attribute split into six quantile classes.  Area
+            area of the attribute split into six classes.  Area
             expansion factors are associated with each plot based on the
             relative proportion of each condition on a plot.  Note that the
             plot estimate typically includes unsampled areas that were
@@ -131,9 +131,12 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             model building but are used in design-based area estimation.
             <br/><br/>
             The second series shows GNN model predictions based on grouping
-            pixel areas into the classes defined by quantile classification of
-            the plot data.  Because GNN is predicted across all forested pixels,
-            there will be no corresponding unsampled area.
+            pixel areas into the classes defined by natural breaks
+            classification of the plot data.  Because GNN is predicted across
+            all forested pixels, there will be no corresponding unsampled
+            area.  As such, the sum of area across forest and nonforest
+            classes will be greater in the GNN estimate than in the FIA
+            estimate.
             <br/><br/>
             Lastly, the third series is based on an area estimation technique
             introduced by Olofsson et al. (2013).  In this approach, an
@@ -142,12 +145,14 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             subset this population to include only plots that were at least
             50% forested.  The error matrix is used to adjust the
             mapped (GNN) based estimates to more closely approximate the
-            relative distribution of the design-based sample.  In addition,
+            relative distribution of this design-based sample.  In addition,
             confidence intervals are constructed which vary as a function
             of the agreement in the error matrix.  Note that GNN and this
             error-adjusted series sum to exactly the same area and, as such,
             the error-adjusted series can be a useful tool in estimating how
-            the unsampled area may be distributed.  
+            the unsampled area may be distributed.  Error-corrected estimates
+            are not provided for nonforest and unsampled classes as denoted
+            by asterisks in the histogram.  
         """
         flowables.extend(
             [
@@ -178,7 +183,9 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             calculated across all plots within that hexagon. As the spatial
             scale of the hexagons increase, more plots are included in the
             calculation of mean observed and predicted values. The paired
-            means for each hexagons are then displayed as scatterplots.
+            means for each hexagon are then displayed as scatterplots.  The
+            average number of plots in each hexagon are reported on the
+            scatterplot.  
             <br/><br/>
             Generally, as spatial scale increases, there is a tighter
             correspondence between hexagon observed and predicted mean values.
