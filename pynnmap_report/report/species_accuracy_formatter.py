@@ -62,8 +62,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         kappa_str = """
            kappa = (Pr(a) - Pr(e)) / (1.0 - Pr(e))
         """
-        para = p.Paragraph(kappa_str, self.styles["indented"])
-        story.append(para)
+        story.append(p.Paragraph(kappa_str, self.styles["indented"]))
         story.append(p.Spacer(0, 0.05 * u.inch))
 
         kappa_str = """
@@ -79,8 +78,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             (errors of omission)<br/>
             OA/PA = Observed Absent / Predicted Absent
         """
-        para = p.Paragraph(kappa_str, self.styles["body_style"])
-        story.append(para)
+        story.append(p.Paragraph(kappa_str, self.styles["body_style"]))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
         # Create a list of lists to hold the species accuracy information
@@ -142,6 +140,10 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         for attr in metadata_parser.attributes:
             if attr.is_species_attr() and "NOTALY" not in attr.field_name:
                 attrs.append(attr.field_name)
+
+        # Subset species to just those with 0.5% prevalence
+        common_species = spp_df[spp_df.PREVALENCE >= 0.005].SPECIES
+        attrs = sorted(list(set(attrs) & set(common_species)))
 
         # Iterate over the species and print out the statistics
         for spp in attrs:
@@ -210,7 +212,6 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         table.setStyle(self.table_styles["species_accuracy"])
         story.append(table)
         story.append(p.Spacer(0, 0.1 * u.inch))
-
 
         # Return this story
         return story
