@@ -333,6 +333,10 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         for c, r in fuzzy_cells:
             cell = (c + 2, r + 2)
             ts.add("BACKGROUND", cell, cell, "#dddddd")
+
+        # Color the correct and fuzzy correct reporting cells
+        ts.add("BACKGROUND", (-2, -2), (-2, -2), "#aaaaaa")
+        ts.add("BACKGROUND", (-1, -1), (-1, -1), "#dddddd")
         table.setStyle(ts)
         return table
 

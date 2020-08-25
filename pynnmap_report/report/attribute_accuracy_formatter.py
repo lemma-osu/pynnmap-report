@@ -376,6 +376,10 @@ class AttributeAccuracyFormatter(ReportFormatter):
         for i in range(2, len(diag) + 1):
             ts.add("BACKGROUND", (i, i + 1), (i, i + 1), "#dddddd")
             ts.add("BACKGROUND", (i + 1, i), (i + 1, i), "#dddddd")
+
+        # Color the correct and fuzzy correct reporting cells
+        ts.add("BACKGROUND", (-2, -2), (-2, -2), "#aaaaaa")
+        ts.add("BACKGROUND", (-1, -1), (-1, -1), "#dddddd")
         table.setStyle(ts)
         return table
 
