@@ -140,9 +140,15 @@ class ObservedPredictedScatterplot(Scatterplot):
             _write_statistic(
                 0.05,
                 0.81,
-                "Average plot count: %.4f" % kwargs["avg_plot_count"],
+                "Average plot count: %.1f" % kwargs["avg_plot_count"],
             )
             rect_y_min, rect_y_size = 0.80, 0.16
+
+        if "hexagon_count" in kwargs:
+            _write_statistic(
+                0.05, 0.77, "Hexagon count: %d" % kwargs["hexagon_count"],
+            )
+            rect_y_min, rect_y_size = 0.76, 0.20
 
         # Set patch to highlight text in case data points obscure it
         rect = patches.Rectangle(
@@ -165,12 +171,12 @@ def draw_scatterplot(df, attr, output_file="foo.png", **kwargs):
     # Extract the observed and predicted series from the data frame
     name, units = attr.field_name, attr.units
     obs, prd = df[name + "_O"], df[name + "_P"]
-    kwargs["xlabel"] = "Predicted {} ({})".format(name, units)
-    kwargs["ylabel"] = "Observed {} ({})".format(name, units)
-
-    if "PLOT_COUNT_O" in df.columns:
-        kwargs["avg_plot_count"] = df["PLOT_COUNT_O"].mean()
-
+    kwargs["xlabel"] = kwargs.get(
+        "xlabel", "Predicted {} ({})".format(name, units)
+    )
+    kwargs["ylabel"] = kwargs.get(
+        "ylabel", "Observed {} ({})".format(name, units)
+    )
     ObservedPredictedScatterplot(obs, prd)(**kwargs)
     plt.draw()
     plt.savefig(output_file, edgecolor="k")

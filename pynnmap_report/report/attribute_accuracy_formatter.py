@@ -98,7 +98,18 @@ def create_riemann_figures(riemann_dir, k, attrs):
         )
         for attr in attrs:
             fn = riemann_image_fn(attr, resolution)
-            cf.draw_scatterplot(merged_df, attr, output_file=fn, kde=False)
+            kwargs = {
+                "kde": False,
+                "xlabel": "Predicted mean {} ({})".format(
+                    attr.field_name, attr.units
+                ),
+                "ylabel": "Observed mean {} ({})".format(
+                    attr.field_name, attr.units
+                ),
+                "avg_plot_count": merged_df["PLOT_COUNT_O"].mean(),
+                "hexagon_count": len(merged_df),
+            }
+            cf.draw_scatterplot(merged_df, attr, output_file=fn, **kwargs)
             files.append(fn)
     return files
 

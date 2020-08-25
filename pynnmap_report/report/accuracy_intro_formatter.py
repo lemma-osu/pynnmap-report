@@ -191,15 +191,21 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             scale of the hexagons increase, more plots are included in the
             calculation of mean observed and predicted values. The paired
             means for each hexagon are then displayed as scatterplots.  The
-            average number of plots in each hexagon are reported on the
-            scatterplot.  
+            average number of plots in each hexagon as well as the number of
+            hexagons in the modeling region are reported on the scatterplot.  
             <br/><br/>
             Generally, as spatial scale increases, there is a tighter
             correspondence between hexagon observed and predicted mean values.
             When this behavior is observed in the scatterplot (and decreasing
             normalized RMSE), it suggests that the correspondence between
             design-based estimates (plots) and model-based estimates (GNN) 
-            converge reliably as a function of spatial scale. 
+            converge reliably as a function of spatial scale. While hexagons
+            themselves are a specific spatial scale, the area of forest being
+            used for comparison is far less. For example, for the 8,660 ha
+            hexagons, only about 5 ha are being compared for the average
+            hexagon (i.e., at the plot footprints). Thus, interpretation of
+            reported accuracies as a direct measure of GNN accuracy at the
+            designated hexagon scale may not be appropriate.
         """
         subheading_style = self.styles["subheading"]
         flowables.extend(
