@@ -136,7 +136,13 @@ class CategoricalAccuracyFormatter(ReportFormatter):
             gray shading on fuzzy classes in the confusion matrix will
             indicate these choices.  Users are encouraged to carefully consider
             whether these fuzzy classifications are appropriate in their
-            applications.  
+            applications.
+            <br/><br/>
+            Four categorical attributes (FORTYPBA, TREEPLBA, CONPLBA, and
+            HDWPLBA) generally have too many classes to be interpretable in
+            a confusion matrix or histogram in this report.  However, we can
+            provide this information for these attributes in comma-separated
+            value (CSV) files upon request.
         """
         flowables.append(Paragraph(intro, self.styles["body_style"]))
         flowables.append(Spacer(0, 0.15 * inch))

@@ -71,7 +71,9 @@ class AccuracyIntroductionFormatter(ReportFormatter):
             values' mean, and the coefficient of determination (R-square).  
             We also display the 1:1 line between observed and predicted values
             and color the dots based on a kernel density estimator to
-            highlight frequent values in the distribution.
+            highlight frequent values in the distribution.  Lower densities
+            of points are displayed in blue and higher densities are displayed
+            in yellow.
             <br/><br/>
             In addition, we present a confusion matrix based on binning the 
             observed-predicted pairs using a natural breaks classification.
