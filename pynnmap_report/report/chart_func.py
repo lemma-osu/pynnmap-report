@@ -160,7 +160,6 @@ class ObservedPredictedScatterplot(Scatterplot):
             transform=axes.transAxes,
             facecolor="white",
             edgecolor="none",
-            zorder=3,
         )
         axes.add_patch(rect)
 
