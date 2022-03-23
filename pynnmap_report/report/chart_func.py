@@ -146,7 +146,9 @@ class ObservedPredictedScatterplot(Scatterplot):
 
         if "hexagon_count" in kwargs:
             _write_statistic(
-                0.05, 0.77, "Hexagon count: %d" % kwargs["hexagon_count"],
+                0.05,
+                0.77,
+                "Hexagon count: %d" % kwargs["hexagon_count"],
             )
             rect_y_min, rect_y_size = 0.76, 0.20
 

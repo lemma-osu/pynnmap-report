@@ -20,7 +20,9 @@ def get_garamond_styles(font_dict):
     )
 
     styles["body_style_right"] = ParagraphStyle(
-        name="BodyRight", parent=styles["body_style"], alignment=enums.TA_RIGHT,
+        name="BodyRight",
+        parent=styles["body_style"],
+        alignment=enums.TA_RIGHT,
     )
 
     styles["body_style_center"] = ParagraphStyle(
@@ -56,11 +58,15 @@ def get_garamond_styles(font_dict):
     )
 
     styles["indented"] = ParagraphStyle(
-        name="Indented", parent=styles["body_style"], leftIndent=24,
+        name="Indented",
+        parent=styles["body_style"],
+        leftIndent=24,
     )
 
     styles["contact_style"] = ParagraphStyle(
-        name="Contact", parent=styles["body_style"], fontSize=10,
+        name="Contact",
+        parent=styles["body_style"],
+        fontSize=10,
     )
 
     styles["contact_style_right"] = ParagraphStyle(
@@ -91,7 +97,9 @@ def get_garamond_styles(font_dict):
     )
 
     styles["code_style_right"] = ParagraphStyle(
-        name="CodeRight", parent=styles["code_style"], alignment=enums.TA_RIGHT,
+        name="CodeRight",
+        parent=styles["code_style"],
+        alignment=enums.TA_RIGHT,
     )
 
     styles["title_style"] = ParagraphStyle(
@@ -134,7 +142,9 @@ def get_open_sans_styles(font_dict):
     )
 
     styles["body_style_right"] = ParagraphStyle(
-        name="BodyRight", parent=styles["body_style"], alignment=enums.TA_RIGHT,
+        name="BodyRight",
+        parent=styles["body_style"],
+        alignment=enums.TA_RIGHT,
     )
 
     styles["body_style_center"] = ParagraphStyle(
@@ -170,11 +180,15 @@ def get_open_sans_styles(font_dict):
     )
 
     styles["indented"] = ParagraphStyle(
-        name="Indented", parent=styles["body_style"], leftIndent=24,
+        name="Indented",
+        parent=styles["body_style"],
+        leftIndent=24,
     )
 
     styles["contact_style"] = ParagraphStyle(
-        name="Contact", parent=styles["body_style"], fontSize=9,
+        name="Contact",
+        parent=styles["body_style"],
+        fontSize=9,
     )
 
     styles["contact_style_right"] = ParagraphStyle(
@@ -205,7 +219,9 @@ def get_open_sans_styles(font_dict):
     )
 
     styles["code_style_right"] = ParagraphStyle(
-        name="CodeRight", parent=styles["code_style"], alignment=enums.TA_RIGHT,
+        name="CodeRight",
+        parent=styles["code_style"],
+        alignment=enums.TA_RIGHT,
     )
 
     styles["title_style"] = ParagraphStyle(
@@ -243,11 +259,17 @@ def get_open_sans_styles(font_dict):
     )
 
     styles["body_9"] = ParagraphStyle(
-        "body_9", parent=styles["body_style"], fontSize=9, leading=9,
+        "body_9",
+        parent=styles["body_style"],
+        fontSize=9,
+        leading=9,
     )
 
     styles["body_11"] = ParagraphStyle(
-        "body_11", parent=styles["body_style"], fontSize=11, leading=11,
+        "body_11",
+        parent=styles["body_style"],
+        fontSize=11,
+        leading=11,
     )
 
     styles["subheading"] = ParagraphStyle(
