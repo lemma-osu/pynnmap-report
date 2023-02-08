@@ -137,10 +137,9 @@ class VegetationClassFormatter(ReportFormatter):
         ]
 
         # Add the data
-        for (i, row) in enumerate(vc_df.itertuples(index=False)):
+        for i, row in enumerate(vc_df.itertuples(index=False)):
             vegclass_row = []
-            for (j, elem) in enumerate(row):
-
+            for j, elem in enumerate(row):
                 # Blank cells
                 if (i, j) in blank_cells:
                     elem_str = ""

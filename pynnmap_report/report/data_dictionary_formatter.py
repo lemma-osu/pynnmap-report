@@ -70,7 +70,6 @@ class DataDictionaryFormatter(ReportFormatter):
             # If this field has codes, create a sub table underneath the
             # field description
             if metadata.codes:
-
                 # Set up a container to hold the code rows
                 code_table = []
 

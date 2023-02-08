@@ -153,7 +153,6 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             # Get the scientific and common names from the report metadata
             # if it exists; otherwise, just use the species symbol
             if rmp is not None:
-
                 # Strip off any suffix if it exists
                 try:
                     spp_plain = spp.split("_")[0]
