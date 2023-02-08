@@ -1,94 +1,107 @@
-from reportlab.lib import units as u
+"""
+LEMMA GNN accuracy report with one page per attribute
+"""
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
+from reportlab.pdfgen.canvas import Canvas
 
-from pynnmap_report.report import accuracy_report
-from pynnmap_report.report import data_dictionary_formatter as ddf
-from pynnmap_report.report import introduction_formatter as intro
-from pynnmap_report.report import local_accuracy_formatter as laf
-from pynnmap_report.report import references_formatter as rf
-from pynnmap_report.report import regional_accuracy_formatter as raf
-from pynnmap_report.report import report_styles
-from pynnmap_report.report import riemann_accuracy_formatter as riemann
-from pynnmap_report.report import species_accuracy_formatter as saf
-from pynnmap_report.report import vegetation_class_formatter as vcf
-from pynnmap_report.report.report_formatter import MissingConstraintError
+from .config import GNN_RELEASE_VERSION
+from .styles.fonts import FONTS
+from .introduction_formatter import IntroductionFormatter
+from .attribute_accuracy_formatter import AttributeAccuracyFormatter
+from .categorical_accuracy_formatter import CategoricalAccuracyFormatter
+from .species_accuracy_formatter import SpeciesAccuracyFormatter
+from .data_dictionary_formatter import DataDictionaryFormatter
+from .references_formatter import ReferencesFormatter
 
 
-class LemmaAccuracyReport(accuracy_report.AccuracyReport):
+class PageNumCanvas(Canvas):
+    def __init__(self, *args, **kwargs):
+        Canvas.__init__(self, *args, **kwargs)
+        self.pages = []
 
-    # Dictionary of diagnostic name to report type
-    report_type = {
-        'local_accuracy': laf.LocalAccuracyFormatter,
-        'regional_accuracy': raf.RegionalAccuracyFormatter,
-        'riemann_accuracy': riemann.RiemannAccuracyFormatter,
-        'species_accuracy': saf.SpeciesAccuracyFormatter,
-        'vegclass_accuracy': vcf.VegetationClassFormatter,
-    }
+    def showPage(self):
+        self.pages.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        page_count = len(self.pages)
+        for page in self.pages:
+            self.__dict__.update(page)
+            self.draw_page_number(page_count)
+            super().showPage()
+        super().save()
+
+    def draw_page_number(self, page_count):
+        page = f"Page {self._pageNumber} of {page_count}"
+        self.setFont(FONTS["Open-Sans"]["regular"], 9)
+        release = f"LEMMA GNN Release {GNN_RELEASE_VERSION}"
+        self.drawString(0.5 * inch, 0.25 * inch, release)
+        self.drawRightString(8.0 * inch, 0.25 * inch, page)
+
+
+class LemmaAccuracyReport:
+    """
+    LEMMA GNN accuracy report with one page per attribute
+    """
 
     def __init__(self, parameter_parser):
-        super(LemmaAccuracyReport, self).__init__(parameter_parser)
+        self.parameter_parser = parameter_parser
+        self.story = []
 
     def create_accuracy_report(self):
-        p = self.parameter_parser
-
-        # Get the name of the output accuracy report
-        out_report = p.accuracy_assessment_report
+        """
+        Run the report and save to PDF file
+        """
+        parser = self.parameter_parser
 
         # Set up the document template
-        pdf = report_styles.GnnDocTemplate(
-            out_report,
-            leftMargin=0.75 * u.inch, rightMargin=0.75 * u.inch,
-            topMargin=0.6 * u.inch, bottomMargin=0.6 * u.inch)
+        doc = BaseDocTemplate(
+            parser.accuracy_assessment_report, pagesize=letter
+        )
+
+        # Add the page template
+        doc.addPageTemplates(
+            [
+                PageTemplate(
+                    id="portrait",
+                    frames=[
+                        Frame(
+                            0.5 * inch,
+                            0.5 * inch,
+                            7.5 * inch,
+                            10.2 * inch,
+                            leftPadding=0,
+                            bottomPadding=0,
+                            rightPadding=0,
+                            topPadding=0,
+                            id=None,
+                        ),
+                    ],
+                ),
+            ]
+        )
 
         # Make a list of formatters which are separate subsections of the
         # report
-        formatters = []
-
-        # Add the introduction to the list of formatters if the report
-        # metadata is present
-        if p.report_metadata_file:
-            try:
-                f = intro.IntroductionFormatter(self.parameter_parser)
-                formatters.append(f)
-            except MissingConstraintError as e:
-                print(e.message)
-
-        # Get instances of the separate components needed to build the
-        # accuracy assessment report
-        for d in p.include_in_report:
-            try:
-                f = (self.report_type[d])(self.parameter_parser)
-                formatters.append(f)
-            except MissingConstraintError as e:
-                print(e.message)
-
-        # Add the data dictionary and references formatters at the end of the
-        # report
-        try:
-            f = ddf.DataDictionaryFormatter(self.parameter_parser)
-            formatters.append(f)
-        except MissingConstraintError as e:
-            print(e.message)
-
-        try:
-            f = rf.ReferencesFormatter()
-            formatters.append(f)
-        except MissingConstraintError as e:
-            print(e.message)
-
-        # Run each instance's formatter
-        for f in formatters:
-            sub_story = f.run_formatter()
+        formatters = [
+            IntroductionFormatter(self.parameter_parser),
+            AttributeAccuracyFormatter(self.parameter_parser),
+            CategoricalAccuracyFormatter(self.parameter_parser),
+            SpeciesAccuracyFormatter(self.parameter_parser),
+            DataDictionaryFormatter(self.parameter_parser),
+            ReferencesFormatter(),
+        ]
+        for formatter in formatters:
+            sub_story = formatter.run_formatter()
             if sub_story is not None:
                 self.story.extend(sub_story[:])
+                del sub_story
 
         # Write out the story
-        if len(self.story) > 0:
-            pdf.build(
-                self.story,
-                onTitle=report_styles.title,
-                onPortrait=report_styles.portrait,
-                onLandscape=report_styles.landscape)
+        doc.build(self.story, canvasmaker=PageNumCanvas)
 
         # Clean up if necessary for each formatter
-        for f in formatters:
-            f.clean_up()
+        for formatter in formatters:
+            formatter.clean_up()
