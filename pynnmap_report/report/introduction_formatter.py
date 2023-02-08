@@ -159,7 +159,16 @@ class IntroductionFormatter(ReportFormatter):
                     "https://lemma.forestry.oregonstate.edu</link>"
                 ),
                 self.styles["body_style"],
-            )
+            ),
+            p.Paragraph(
+                (
+                    "<strong>LEMMA Data Download Website:</strong> "
+                    '<link color="#0000ff" '
+                    'href="https://lemmadownload.forestry.oregonstate.edu/">'
+                    "https://lemmadownload.forestry.oregonstate.edu</link>"
+                ),
+                self.styles["body_style"],
+            ),
         ]
 
     def model_information(self, rmp):
@@ -220,16 +229,13 @@ class IntroductionFormatter(ReportFormatter):
         imagery_str = """
             The current versions of the GNN maps were developed using
             data from inventory plots that span a range of dates, and
-            from a yearly time-series of Landsat imagery mosaics from
-            1985 to 2017 developed using the Landscape Change Monitoring
-            Study (LCMS) algorithms (Cohen et al., 2018). For model
-            development, plots were matched to spectral data for the
-            same year as plot measurement. In addition, because as many
-            as four plots were measured at a given plot location, we
-            constrained the imputation for a given map year to only one plot
-            from each location -- the plot nearest in date to the imagery
-            (map) year. See Ohmann et al. (2014) for more detailed
-            information about the GNN modeling process.
+            from a yearly time-series of Landsat and Sentinel-2 imagery
+            mosaics from 1986 to 2021 developed using the Continuous Change
+            Detection and Classification (CCDC) algorithms (Zhu and
+            Woodcock, 2014). For model development, plots were matched
+            to spectral data for the same year as plot measurement.
+            See Ohmann et al. (2014) for more detailed information about
+            the GNN modeling process.
         """
         return [
             p.Paragraph(plot_title, self.styles["body_style"]),

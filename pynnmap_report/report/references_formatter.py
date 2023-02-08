@@ -42,18 +42,6 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
             20: 37-46.
             """,
             """
-            Cohen, WB, Z Yang, SP Healey, RE Kennedy, and N Gorelick. 2018.
-            "A LandTrendr multispectral ensemble for forest disturbance
-            detection." Remote Sensing of Environment 205: 131-140.
-            """,
-            """
-            Kennedy, RE, Z Yang and WB Cohen. 2010. "Detecting trends
-            in forest disturbance and recovery using yearly Landsat
-            time series: 1. Landtrendr -- Temporal segmentation
-            algorithms." Remote Sensing of Environment 114:
-            2897-2910.
-            """,
-            """
             Olofsson, P, GM Foody, SV Stehman, and CE Woodcock. 2013.
             "Making better use of accuracy data in land change studies:
             Estimating accuracy and area and quantifying uncertainty using
@@ -78,6 +66,11 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
             assessment protocol for continuous geospatial datasets of
             forest characteristics using USFS Forest Inventory and
             Analysis (FIA) data." Remote Sensing of Environment 114: 2337-2352.
+            """,
+            """
+            Zhu, Z and CE Woodcock. 2014. "Continuous change detection and
+            classification of land cover using all available Landsat data."
+            Remote Sensing of Environment 144: 152-171.
             """,
         ]
 

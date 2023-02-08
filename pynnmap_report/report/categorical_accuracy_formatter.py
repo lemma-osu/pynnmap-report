@@ -119,7 +119,7 @@ class CategoricalAccuracyFormatter(ReportFormatter):
             distributions based on FIA plot estimates, GNN-based model
             predictions and the aforementioned Olofsson et al. (2013) 
             error-corrected area estimates (see explanation in continuous
-            attribute section.
+            attribute section).
             <br/><br/>
             In contrast to the continuous attributes, plot-based predictions
             for categorical attributes are constructed from the single

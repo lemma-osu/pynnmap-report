@@ -42,7 +42,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
 
         # Species introduction
         intro_str = """
-            On this page, we present accuracies and kappa coefficients for
+            In this section, we present accuracies and kappa coefficients for
             all tree species that occur on at least 0.5% of observed model
             plots.  The measure of accuracy is based on species presence or
             absence.  Observed presence is defined as a given species occurring
