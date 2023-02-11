@@ -42,14 +42,15 @@ class DataDictionaryFormatter(ReportFormatter):
 
         # Subset the attributes to those that are accuracy attributes, are
         # identified to go into the report, and are not species variables
-        attrs = []
-        for attr in metadata_parser.attributes:
+        attrs = [
+            attr.field_name
+            for attr in metadata_parser.attributes
             if (
                 attr.is_accuracy_attr() is True
                 and attr.is_project_attr() is True
                 and attr.is_species_attr() is False
-            ):
-                attrs.append(attr.field_name)
+            )
+        ]
 
         # Set up the master dictionary table
         dictionary_table = []
@@ -64,7 +65,7 @@ class DataDictionaryFormatter(ReportFormatter):
 
             field_para = p.Paragraph(field_name, self.styles["body_9"])
             if units != "none":
-                description += " (" + units + ")"
+                description += f" ({units})"
             field_desc_para = p.Paragraph(description, self.styles["body_9"])
 
             # If this field has codes, create a sub table underneath the
@@ -124,8 +125,6 @@ class DataDictionaryFormatter(ReportFormatter):
             spp_str += " percent cover."
 
         para = p.Paragraph(spp_str, self.styles["body_style"])
-        story.append(p.Spacer(0, 0.1 * u.inch))
-        story.append(para)
-
+        story.extend((p.Spacer(0, 0.1 * u.inch), para))
         # Return this story
         return story

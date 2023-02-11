@@ -1,6 +1,8 @@
 """
 Formatter to report species accuracy including kappas
 """
+from typing import Any, List
+
 import pandas as pd
 from reportlab import platypus as p
 from reportlab.lib import colors
@@ -25,6 +27,71 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         self.stand_metadata_file = parameter_parser.stand_metadata_file
         self.report_metadata_file = parameter_parser.report_metadata_file
         self.check_missing_files()
+
+    def build_header_cell_count_table(self) -> p.Table:
+        def _paragraph(contents: str) -> p.Paragraph:
+            return p.Paragraph(
+                f"<strong>{contents}</strong>",
+                self.styles["contact_style_right"],
+            )
+
+        header_cells = [
+            list(map(_paragraph, ("OP/PP", "OP/PA"))),
+            list(map(_paragraph, ("OA/PP", "OA/PA"))),
+        ]
+        table = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
+        table.setStyle(self.table_styles["default_shaded"])
+        return table
+
+    def species_name(
+        self, spp: str, metadata: xrmp.XMLReportMetadataParser = None
+    ) -> p.Paragraph:
+        if metadata is not None:
+            try:
+                spp_plain = spp.split("_")[0]
+                spp_info = metadata.get_species(spp_plain)
+                spp_str = (
+                    f"{spp_info.spp_symbol}<br/>"
+                    f"{spp_info.scientific_name}/{spp_info.common_name}"
+                )
+            except IndexError:
+                spp_str = spp
+        else:
+            spp_str = spp
+        return p.Paragraph(spp_str, self.styles["contact_style"])
+
+    def count_table(self, plot_counts: List[int]) -> p.Table:
+        def _paragraph(value: int) -> p.Paragraph:
+            return p.Paragraph(f"{value}", self.styles["contact_style_right"])
+
+        cells = [
+            list(map(_paragraph, plot_counts[:2])),
+            list(map(_paragraph, plot_counts[2:])),
+        ]
+        count_table = p.Table(cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
+        count_table.setStyle(self.table_styles["default_shaded"])
+        return count_table
+
+    def build_species_table_row(
+        self,
+        spp: str,
+        spp_df: pd.DataFrame,
+        metadata: xrmp.XMLReportMetadataParser = None,
+    ) -> List[Any]:
+        spp_data = spp_df[spp_df.SPECIES == spp].squeeze()
+        plot_counts = [
+            getattr(spp_data, x) for x in ("OP_PP", "OP_PA", "OA_PP", "OA_PA")
+        ]
+        return [
+            self.species_name(spp, metadata),
+            p.Paragraph(
+                f"{spp_data.PREVALENCE:.4f}", self.styles["contact_style_right"]
+            ),
+            self.count_table(plot_counts),
+            p.Paragraph(
+                f"{spp_data.KAPPA:.4f}", self.styles["contact_style_right"]
+            ),
+        ]
 
     def run_formatter(self):
         """
@@ -56,14 +123,22 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             measure of reliability, accounting for agreement occurring by 
             chance. The equation for kappa is:
         """
-        story.append(p.Paragraph(intro_str, self.styles["body_style"]))
-        story.append(p.Spacer(0, 0.05 * u.inch))
+        story.extend(
+            [
+                p.Paragraph(intro_str, self.styles["body_style"]),
+                p.Spacer(0, 0.05 * u.inch),
+            ]
+        )
 
         kappa_str = """
            kappa = (Pr(a) - Pr(e)) / (1.0 - Pr(e))
         """
-        story.append(p.Paragraph(kappa_str, self.styles["indented"]))
-        story.append(p.Spacer(0, 0.05 * u.inch))
+        story.extend(
+            [
+                p.Paragraph(kappa_str, self.styles["indented"]),
+                p.Spacer(0, 0.05 * u.inch),
+            ]
+        )
 
         kappa_str = """
             where Pr(a) is the relative observed agreement among
@@ -78,52 +153,30 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             (errors of omission)<br/>
             OA/PA = Observed Absent / Predicted Absent
         """
-        story.append(p.Paragraph(kappa_str, self.styles["body_style"]))
-        story.append(p.Spacer(0, 0.2 * u.inch))
+        story.extend(
+            [
+                p.Paragraph(kappa_str, self.styles["body_style"]),
+                p.Spacer(0, 0.2 * u.inch),
+            ]
+        )
 
-        # Create a list of lists to hold the species accuracy information
-        species_table = []
-
-        # Header row
-        header_row = []
-
-        spp_str = "<strong>Species PLANTS Code<br/>"
-        spp_str += "Scientific Name / Common Name</strong>"
-        para = p.Paragraph(spp_str, self.styles["contact_style"])
-        header_row.append(para)
+        spp_str = (
+            "<strong>Species PLANTS Code<br/>Scientific Name / Common"
+            " Name</strong>"
+        )
+        header_row = [p.Paragraph(spp_str, self.styles["contact_style"])]
 
         spp_str = "<strong>Species prevalence</strong>"
-        para = p.Paragraph(spp_str, self.styles["contact_style"])
-        header_row.append(para)
+        header_row.append(p.Paragraph(spp_str, self.styles["contact_style"]))
 
-        header_cells = [
-            [
-                p.Paragraph(
-                    "<strong>OP/PP</strong>", self.styles["contact_style_right"]
-                ),
-                p.Paragraph(
-                    "<strong>OP/PA</strong>", self.styles["contact_style_right"]
-                ),
-            ],
-            [
-                p.Paragraph(
-                    "<strong>OA/PP</strong>", self.styles["contact_style_right"]
-                ),
-                p.Paragraph(
-                    "<strong>OA/PA</strong>", self.styles["contact_style_right"]
-                ),
-            ],
-        ]
-        table = p.Table(header_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch])
-        table.setStyle(self.table_styles["default_shaded"])
+        table = self.build_header_cell_count_table()
         header_row.append(table)
 
         kappa_str = "<strong>Kappa coefficient</strong>"
-        para = p.Paragraph(kappa_str, self.styles["contact_style"])
-        header_row.append(para)
-        species_table.append(header_row)
+        header_row.append(p.Paragraph(kappa_str, self.styles["contact_style"]))
+        species_table = [header_row]
 
-        # Open the species accuracy file into a recarray
+        # Open the species accuracy file into a dataframe
         spp_df = pd.read_csv(self.species_accuracy_file)
 
         # Read in the stand attribute metadata
@@ -136,74 +189,20 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             rmp = None
 
         # Subset the attributes to just species
-        attrs = []
-        for attr in metadata_parser.attributes:
-            if attr.is_species_attr() and "NOTALY" not in attr.field_name:
-                attrs.append(attr.field_name)
+        attrs = [
+            attr.field_name
+            for attr in metadata_parser.attributes
+            if attr.is_species_attr() and "NOTALY" not in attr.field_name
+        ]
 
         # Subset species to just those with 0.5% prevalence
         common_species = spp_df[spp_df.PREVALENCE >= 0.005].SPECIES
         attrs = sorted(list(set(attrs) & set(common_species)))
 
-        # Iterate over the species and print out the statistics
-        for spp in attrs:
-            # Empty row to hold the formatted output
-            species_row = []
-
-            # Get the scientific and common names from the report metadata
-            # if it exists; otherwise, just use the species symbol
-            if rmp is not None:
-                # Strip off any suffix if it exists
-                try:
-                    spp_plain = spp.split("_")[0]
-                    spp_info = rmp.get_species(spp_plain)
-                    spp_str = spp_info.spp_symbol + "<br/>"
-                    spp_str += spp_info.scientific_name + " / "
-                    spp_str += spp_info.common_name
-                except IndexError:
-                    spp_str = spp
-            else:
-                spp_str = spp
-            para = p.Paragraph(spp_str, self.styles["contact_style"])
-            species_row.append(para)
-
-            # Get the statistical information
-            data = spp_df[spp_df.SPECIES == spp]
-            counts = [data.OP_PP, data.OP_PA, data.OA_PP, data.OA_PA]
-            prevalence = data.PREVALENCE
-            kappa = data.KAPPA
-
-            # Species prevalence
-            prevalence_str = "%.4f" % prevalence
-            para = p.Paragraph(
-                prevalence_str, self.styles["contact_style_right"]
-            )
-            species_row.append(para)
-
-            # Capture the plot counts in an inner table
-            count_cells = []
-            count_row = []
-            for i in range(0, 4):
-                para = p.Paragraph(
-                    "%d" % counts[i], self.styles["contact_style_right"]
-                )
-                count_row.append(para)
-                if i % 2 == 1:
-                    count_cells.append(count_row)
-                    count_row = []
-            table = p.Table(
-                count_cells, colWidths=[0.75 * u.inch, 0.75 * u.inch]
-            )
-            table.setStyle(self.table_styles["default_shaded"])
-            species_row.append(table)
-
-            # Print out the kappa statistic
-            kappa_str = "%.4f" % kappa
-            para = p.Paragraph(kappa_str, self.styles["contact_style_right"])
-            species_row.append(para)
-
-            # Push this row to the master species table
-            species_table.append(species_row)
+        # Build the table with accuracy information
+        species_table.extend(
+            [self.build_species_table_row(spp, spp_df, rmp) for spp in attrs]
+        )
 
         # Style this into a reportlab table and add to the story
         col_widths = [(x * u.inch) for x in [4.0, 1.0, 1.5, 1.0]]

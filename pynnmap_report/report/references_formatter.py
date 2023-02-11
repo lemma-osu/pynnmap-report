@@ -76,9 +76,12 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
 
         # Print all references
         for reference in references:
-            para = p.Paragraph(reference, self.styles["body_style"])
-            story.append(para)
-            story.append(p.Spacer(0, 0.15 * u.inch))
+            story.extend(
+                [
+                    p.Paragraph(reference, self.styles["body_style"]),
+                    p.Spacer(0, 0.15 * u.inch),
+                ]
+            )
 
         # Return this story
         return story
