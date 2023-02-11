@@ -41,7 +41,7 @@ def make_figure_table(image_files):
 
     # Determine if there are any images left to print
     if len(row_data) != 0:
-        for i in range(len(row_data), cols):
+        for _ in range(len(row_data), cols):
             row_data.append(p.Paragraph("", STYLES["body_style"]))
         table_data.append(row_data)
 
@@ -100,7 +100,7 @@ class ReportFormatter:
         try:
             utilities.check_missing_files(files)
         except utilities.MissingConstraintError as err:
-            err.message += "\nSkipping {}\n".format(self.__class__.__name__)
+            err.message += f"\nSkipping {self.__class__.__name__}\n"
             raise err
 
     def create_section_title(self, title_str):

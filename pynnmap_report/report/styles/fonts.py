@@ -26,7 +26,7 @@ def register_custom_font(font_family, font_name, file_name, bold, italic):
 
 
 def load_fonts():
-    _fonts = {
+    return {
         "Garamond": {
             "regular": register_custom_font(
                 "Garamond",
@@ -89,7 +89,6 @@ def load_fonts():
             ),
         },
     }
-    return _fonts
 
 
 FONTS = load_fonts()

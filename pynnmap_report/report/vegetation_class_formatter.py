@@ -39,8 +39,6 @@ class VegetationClassFormatter(ReportFormatter):
         # Create a page break
         story.extend(page_break(self.LANDSCAPE))
 
-        # This class is somewhat of a hack, in that it likely only works on
-        # rotated paragraphs which fit into the desired cell area
         class RotatedParagraph(p.Paragraph):
             """Rotated platypus paragraph"""
 
@@ -57,9 +55,10 @@ class VegetationClassFormatter(ReportFormatter):
                 self.canv.translate(0.0, -10.0)
                 p.Paragraph.draw(self)
 
-        # Section title
-        title_str = "<strong>Local-Scale Accuracy Assessment: "
-        title_str += "Error Matrix for Vegetation Classes at Plot "
+        title_str = (
+            "<strong>Local-Scale Accuracy Assessment: "
+            + "Error Matrix for Vegetation Classes at Plot "
+        )
         title_str += "Locations</strong>"
 
         para = p.Paragraph(title_str, styles["section_style"])
@@ -76,11 +75,9 @@ class VegetationClassFormatter(ReportFormatter):
                 ]
             )
         )
-        story.append(table)
-        story.append(p.Spacer(0, 0.1 * u.inch))
-
+        story.extend((table, p.Spacer(0, 0.1 * u.inch)))
         # Read in the vegclass error matrix
-        names = ["P_" + str(x) for x in range(1, 12)]
+        names = [f"P_{str(x)}" for x in range(1, 12)]
         names.insert(0, "OBSERVED")
         names.extend(["TOTAL", "CORRECT", "FUZZY_CORRECT"])
         vc_df = pd.read_csv(self.vc_errmatrix_file, skiprows=1, names=names)
@@ -93,25 +90,15 @@ class VegetationClassFormatter(ReportFormatter):
         vegclass_metadata = metadata_parser.get_attribute("VEGCLASS")
         vc_codes = vegclass_metadata.codes
 
-        # Create a list of lists to hold the vegclass table
-        vegclass_table = []
-
-        # Add an empty row which will be a span row for the predicted label
-        header_row = []
-        for i in range(2):
-            header_row.append("")
+        header_row = ["" for _ in range(2)]
         prd_str = "<strong>Predicted Class</strong>"
         para = p.Paragraph(prd_str, styles["body_style_10_center"])
         header_row.append(para)
-        for i in range(len(vc_df) - 1):
-            header_row.append("")
-        vegclass_table.append(header_row)
-
+        header_row.extend("" for _ in range(len(vc_df) - 1))
+        vegclass_table = [header_row]
         # Add the predicted labels
         summary_labels = ("Total", "% Correct", "% FCorrect")
-        header_row = []
-        for i in range(2):
-            header_row.append("")
+        header_row = ["" for _ in range(2)]
         for code in vc_codes:
             label = re.sub("-", "-<br/>", code.label)
             para = p.Paragraph(label, styles["body_style_10_right"])
@@ -176,10 +163,8 @@ class VegetationClassFormatter(ReportFormatter):
 
         # Set up the widths for the table cells
         widths = [0.3, 0.85]
-        for i in range(len(vc_codes)):
-            widths.append(0.56)
-        for i in range(3):
-            widths.append(0.66)
+        widths.extend(0.56 for _ in range(len(vc_codes)))
+        widths.extend(0.66 for _ in range(3))
         widths = [x * u.inch for x in widths]
 
         # Convert the vegclass table into a reportlab table
@@ -238,8 +223,8 @@ class VegetationClassFormatter(ReportFormatter):
             11: [7, 10],
         }
 
-        for key in fuzzy:
-            for elem in fuzzy[key]:
+        for key, value in fuzzy.items():
+            for elem in value:
                 table.setStyle(
                     p.TableStyle(
                         [
@@ -253,10 +238,7 @@ class VegetationClassFormatter(ReportFormatter):
                     )
                 )
 
-        # Add this table to the story
-        story.append(table)
-        story.append(p.Spacer(0, 0.1 * u.inch))
-
+        story.extend((table, p.Spacer(0, 0.1 * u.inch)))
         # Explanation and definitions of vegetation class categories
         cell_str = """
             Cell values are model plot counts.  Dark gray cells represent
@@ -268,9 +250,7 @@ class VegetationClassFormatter(ReportFormatter):
             included in the percent fuzzy correct.
         """
         para = p.Paragraph(cell_str, styles["body_style_9"])
-        story.append(para)
-        story.append(p.Spacer(0, 0.1 * u.inch))
-
+        story.extend((para, p.Spacer(0, 0.1 * u.inch)))
         head_str = """
             <strong>Vegetation Class (VEGCLASS) Definitions</strong> --
             CANCOV (canopy cover of all live trees), BAH_PROP (proportion of
@@ -278,9 +258,7 @@ class VegetationClassFormatter(ReportFormatter):
             all dominant and codominant trees).
         """
         para = p.Paragraph(head_str, styles["body_style_9"])
-        story.append(para)
-        story.append(p.Spacer(0, 0.1 * u.inch))
-
+        story.extend((para, p.Spacer(0, 0.1 * u.inch)))
         # Print out the vegclass code definitions
         for code in vc_codes:
             label = code.label

@@ -58,21 +58,15 @@ class IntroductionFormatter(ReportFormatter):
                                 self.styles["title_style"],
                             ),
                             p.Paragraph(
-                                "{} (Modeling Region {})".format(
-                                    rmp.model_region_name, self.model_region
-                                ),
+                                f"{rmp.model_region_name} (Modeling Region {self.model_region})",
                                 self.styles["sub_title_style"],
                             ),
                             p.Paragraph(
-                                "Model Type: {}".format(
-                                    model_type_dict[self.model_type]
-                                ),
+                                f"Model Type: {model_type_dict[self.model_type]}",
                                 self.styles["sub_title_style"],
                             ),
                             p.Paragraph(
-                                "Release Version: {}".format(
-                                    GNN_RELEASE_VERSION
-                                ),
+                                f"Release Version: {GNN_RELEASE_VERSION}",
                                 self.styles["sub_title_style"],
                             ),
                         ],
@@ -166,20 +160,15 @@ class IntroductionFormatter(ReportFormatter):
         """
         General model information
         """
-        time_str = "<strong>Report Date:</strong> {}".format(
-            datetime.now().strftime("%Y.%m.%d")
+        time_str = (
+            f'<strong>Report Date:</strong> {datetime.now().strftime("%Y.%m.%d")}'
         )
 
         # Model region area
         locale.setlocale(locale.LC_ALL, "")
         mr_area_ha = rmp.model_region_area
         mr_area_ac = mr_area_ha * self.ACRES_PER_HECTARE
-        mr_area_str = (
-            "<strong>Model Region Area:</strong> {} hectares ({} acres)"
-        ).format(
-            locale.format("%d", mr_area_ha, True),
-            locale.format("%d", mr_area_ac, True),
-        )
+        mr_area_str = f'<strong>Model Region Area:</strong> {locale.format("%d", mr_area_ha, True)} hectares ({locale.format("%d", mr_area_ac, True)} acres)'
 
         # Forest area
         forest_area_ha = rmp.forest_area
@@ -193,9 +182,7 @@ class IntroductionFormatter(ReportFormatter):
         )
 
         # Model imagery date
-        mr_imagery_str = "<strong>Model Imagery Date:</strong> {}".format(
-            self.model_year
-        )
+        mr_imagery_str = f"<strong>Model Imagery Date:</strong> {self.model_year}"
 
         return [
             p.Paragraph("General Information", self.styles["heading_style"]),
@@ -302,17 +289,14 @@ class IntroductionFormatter(ReportFormatter):
     def _build_long_data_source_row(self, source):
         years = (x.assessment_year for x in source.assessment_years)
         count = sum(x.plot_count for x in source.assessment_years)
-        return (
-            count,
-            [
-                p.Paragraph(source.data_source, self.styles["contact_style"]),
-                p.Paragraph(source.description, self.styles["contact_style"]),
-                p.Paragraph(
-                    "{}-{}: {}".format(min(years), max(years), count),
-                    self.styles["contact_style_right"],
-                ),
-            ],
-        )
+        return count, [
+            p.Paragraph(source.data_source, self.styles["contact_style"]),
+            p.Paragraph(source.description, self.styles["contact_style"]),
+            p.Paragraph(
+                f"{min(years)}-{max(years)}: {count}",
+                self.styles["contact_style_right"],
+            ),
+        ]
 
     def plots_by_date(self, rmp):
         """
@@ -431,10 +415,6 @@ class IntroductionFormatter(ReportFormatter):
         """
         # Report metadata
         rmp = xrmp.XMLReportMetadataParser(self.report_metadata_file)
-
-        # Only run self.plot_matching when sppsz
-        if self.model_type == "sppsz":
-            pass
 
         story = [
             self.report_heading(rmp),

@@ -28,7 +28,7 @@ from .report_formatter import ReportFormatter, page_break
 
 def regional_image_fn(attr):
     """File name for regional accuracy histogram image"""
-    return "{}_area.png".format(attr.field_name.lower())
+    return f"{attr.field_name.lower()}_area.png"
 
 
 def create_regional_figures(area_df, olofsson_df, attrs):

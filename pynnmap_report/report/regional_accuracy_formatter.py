@@ -51,14 +51,13 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # Read in the stand attribute metadata
         mp = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
 
-        # Subset the attributes to those that are accuracy attributes,
-        # are identified to go into the report, and are not species variables
-        attrs = []
-        for attr in mp.attributes:
-            if attr.is_accuracy_attr() and attr.is_project_attr() and \
-                    not attr.is_species_attr():
-                attrs.append(attr.field_name)
-
+        attrs = [
+            attr.field_name
+            for attr in mp.attributes
+            if attr.is_accuracy_attr()
+            and attr.is_project_attr()
+            and not attr.is_species_attr()
+        ]
         # Iterate over the attributes and create a histogram file of each
         histogram_files = []
         for attr in attrs:
@@ -112,9 +111,10 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         # Create a page break
         story = self._make_page_break(story, self.PORTRAIT)
 
-        # Section title
-        title_str = '<strong>Regional-Scale Accuracy Assessment:<br/> Area '
-        title_str += 'Distributions from Regional Inventory Plots vs. '
+        title_str = (
+            '<strong>Regional-Scale Accuracy Assessment:<br/> Area '
+            + 'Distributions from Regional Inventory Plots vs. '
+        )
         title_str += 'GNN</strong>'
         story.append(self._make_title(title_str))
         story.append(p.Spacer(0, 0.20 * u.inch))

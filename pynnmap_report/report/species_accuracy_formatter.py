@@ -81,17 +81,12 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         story.append(p.Paragraph(kappa_str, self.styles["body_style"]))
         story.append(p.Spacer(0, 0.2 * u.inch))
 
-        # Create a list of lists to hold the species accuracy information
-        species_table = []
-
-        # Header row
-        header_row = []
-
-        spp_str = "<strong>Species PLANTS Code<br/>"
-        spp_str += "Scientific Name / Common Name</strong>"
+        spp_str = (
+            "<strong>Species PLANTS Code<br/>"
+            + "Scientific Name / Common Name</strong>"
+        )
         para = p.Paragraph(spp_str, self.styles["contact_style"])
-        header_row.append(para)
-
+        header_row = [para]
         spp_str = "<strong>Species prevalence</strong>"
         para = p.Paragraph(spp_str, self.styles["contact_style"])
         header_row.append(para)
@@ -121,8 +116,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         kappa_str = "<strong>Kappa coefficient</strong>"
         para = p.Paragraph(kappa_str, self.styles["contact_style"])
         header_row.append(para)
-        species_table.append(header_row)
-
+        species_table = [header_row]
         # Open the species accuracy file into a recarray
         spp_df = pd.read_csv(self.species_accuracy_file)
 
@@ -135,21 +129,17 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         else:
             rmp = None
 
-        # Subset the attributes to just species
-        attrs = []
-        for attr in metadata_parser.attributes:
-            if attr.is_species_attr() and "NOTALY" not in attr.field_name:
-                attrs.append(attr.field_name)
-
+        attrs = [
+            attr.field_name
+            for attr in metadata_parser.attributes
+            if attr.is_species_attr() and "NOTALY" not in attr.field_name
+        ]
         # Subset species to just those with 0.5% prevalence
         common_species = spp_df[spp_df.PREVALENCE >= 0.005].SPECIES
         attrs = sorted(list(set(attrs) & set(common_species)))
 
         # Iterate over the species and print out the statistics
         for spp in attrs:
-            # Empty row to hold the formatted output
-            species_row = []
-
             # Get the scientific and common names from the report metadata
             # if it exists; otherwise, just use the species symbol
             if rmp is not None:
@@ -166,8 +156,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             else:
                 spp_str = spp
             para = p.Paragraph(spp_str, self.styles["contact_style"])
-            species_row.append(para)
-
+            species_row = [para]
             # Get the statistical information
             data = spp_df[spp_df.SPECIES == spp]
             counts = [data.OP_PP, data.OP_PA, data.OA_PP, data.OA_PA]
@@ -184,7 +173,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             # Capture the plot counts in an inner table
             count_cells = []
             count_row = []
-            for i in range(0, 4):
+            for i in range(4):
                 para = p.Paragraph(
                     "%d" % counts[i], self.styles["contact_style_right"]
                 )
