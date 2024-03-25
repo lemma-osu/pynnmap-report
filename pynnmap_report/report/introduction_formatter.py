@@ -58,21 +58,21 @@ class IntroductionFormatter(ReportFormatter):
                                 self.styles["title_style"],
                             ),
                             p.Paragraph(
-                                "{} (Modeling Region {})".format(
-                                    rmp.model_region_name, self.model_region
+                                (
+                                    f"{rmp.model_region_name} (Modeling Region"
+                                    f" {self.model_region})"
                                 ),
                                 self.styles["sub_title_style"],
                             ),
                             p.Paragraph(
-                                "Model Type: {}".format(
-                                    model_type_dict[self.model_type]
+                                (
+                                    "Model Type:"
+                                    f" {model_type_dict[self.model_type]}"
                                 ),
                                 self.styles["sub_title_style"],
                             ),
                             p.Paragraph(
-                                "Release Version: {}".format(
-                                    GNN_RELEASE_VERSION
-                                ),
+                                f"Release Version: {GNN_RELEASE_VERSION}",
                                 self.styles["sub_title_style"],
                             ),
                         ],
@@ -148,7 +148,7 @@ class IntroductionFormatter(ReportFormatter):
 
     def website_information(self):
         """
-        Website address and link
+        Website addresses and link
         """
         return [
             p.Paragraph(
@@ -159,15 +159,25 @@ class IntroductionFormatter(ReportFormatter):
                     "https://lemma.forestry.oregonstate.edu</link>"
                 ),
                 self.styles["body_style"],
-            )
+            ),
+            p.Paragraph(
+                (
+                    "<strong>LEMMA Data Download Website:</strong> "
+                    '<link color="#0000ff" '
+                    'href="https://lemmadownload.forestry.oregonstate.edu/">'
+                    "https://lemmadownload.forestry.oregonstate.edu</link>"
+                ),
+                self.styles["body_style"],
+            ),
         ]
 
     def model_information(self, rmp):
         """
         General model information
         """
-        time_str = "<strong>Report Date:</strong> {}".format(
-            datetime.now().strftime("%Y.%m.%d")
+        time_str = (
+            "<strong>Report Date:</strong>"
+            f' {datetime.now().strftime("%Y.%m.%d")}'
         )
 
         # Model region area
@@ -175,10 +185,9 @@ class IntroductionFormatter(ReportFormatter):
         mr_area_ha = rmp.model_region_area
         mr_area_ac = mr_area_ha * self.ACRES_PER_HECTARE
         mr_area_str = (
-            "<strong>Model Region Area:</strong> {} hectares ({} acres)"
-        ).format(
-            locale.format("%d", mr_area_ha, True),
-            locale.format("%d", mr_area_ac, True),
+            "<strong>Model Region Area:</strong>"
+            f' {locale.format("%d", mr_area_ha, True)} hectares'
+            f' ({locale.format("%d", mr_area_ac, True)} acres)'
         )
 
         # Forest area
@@ -193,8 +202,8 @@ class IntroductionFormatter(ReportFormatter):
         )
 
         # Model imagery date
-        mr_imagery_str = "<strong>Model Imagery Date:</strong> {}".format(
-            self.model_year
+        mr_imagery_str = (
+            f"<strong>Model Imagery Date:</strong> {self.model_year}"
         )
 
         return [
@@ -220,16 +229,13 @@ class IntroductionFormatter(ReportFormatter):
         imagery_str = """
             The current versions of the GNN maps were developed using
             data from inventory plots that span a range of dates, and
-            from a yearly time-series of Landsat imagery mosaics from
-            1985 to 2017 developed using the Landscape Change Monitoring
-            Study (LCMS) algorithms (Cohen et al., 2018). For model
-            development, plots were matched to spectral data for the
-            same year as plot measurement. In addition, because as many
-            as four plots were measured at a given plot location, we
-            constrained the imputation for a given map year to only one plot
-            from each location -- the plot nearest in date to the imagery
-            (map) year. See Ohmann et al. (2014) for more detailed
-            information about the GNN modeling process.
+            from a yearly time-series of Landsat and Sentinel-2 imagery
+            mosaics from 1986 to 2021 developed using the Continuous Change
+            Detection and Classification (CCDC) algorithms (Zhu and
+            Woodcock, 2014). For model development, plots were matched
+            to spectral data for the same year as plot measurement.
+            See Ohmann et al. (2014) for more detailed information about
+            the GNN modeling process.
         """
         return [
             p.Paragraph(plot_title, self.styles["body_style"]),
@@ -302,17 +308,14 @@ class IntroductionFormatter(ReportFormatter):
     def _build_long_data_source_row(self, source):
         years = (x.assessment_year for x in source.assessment_years)
         count = sum(x.plot_count for x in source.assessment_years)
-        return (
-            count,
-            [
-                p.Paragraph(source.data_source, self.styles["contact_style"]),
-                p.Paragraph(source.description, self.styles["contact_style"]),
-                p.Paragraph(
-                    "{}-{}: {}".format(min(years), max(years), count),
-                    self.styles["contact_style_right"],
-                ),
-            ],
-        )
+        return count, [
+            p.Paragraph(source.data_source, self.styles["contact_style"]),
+            p.Paragraph(source.description, self.styles["contact_style"]),
+            p.Paragraph(
+                f"{min(years)}-{max(years)}: {count}",
+                self.styles["contact_style_right"],
+            ),
+        ]
 
     def plots_by_date(self, rmp):
         """
@@ -431,10 +434,6 @@ class IntroductionFormatter(ReportFormatter):
         """
         # Report metadata
         rmp = xrmp.XMLReportMetadataParser(self.report_metadata_file)
-
-        # Only run self.plot_matching when sppsz
-        if self.model_type == "sppsz":
-            pass
 
         story = [
             self.report_heading(rmp),

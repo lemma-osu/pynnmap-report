@@ -171,16 +171,12 @@ def draw_scatterplot(df, attr, output_file="foo.png", **kwargs):
     """
     # Extract the observed and predicted series from the data frame
     name, units = attr.field_name, attr.units
-    obs, prd = df[name + "_O"], df[name + "_P"]
-    kwargs["xlabel"] = kwargs.get(
-        "xlabel", "Predicted {} ({})".format(name, units)
-    )
-    kwargs["ylabel"] = kwargs.get(
-        "ylabel", "Observed {} ({})".format(name, units)
-    )
+    obs, prd = df[f"{name}_O"], df[f"{name}_P"]
+    kwargs["xlabel"] = kwargs.get("xlabel", f"Predicted {name} ({units})")
+    kwargs["ylabel"] = kwargs.get("ylabel", f"Observed {name} ({units})")
     ObservedPredictedScatterplot(obs, prd)(**kwargs)
     plt.draw()
-    plt.savefig(output_file, edgecolor="k")
+    plt.savefig(output_file, edgecolor="k", dpi=250)
 
 
 class Series:
@@ -225,8 +221,7 @@ class SeriesGroup:
         return self.series[item]
 
     def __iter__(self):
-        for series in self.series:
-            yield series
+        yield from self.series
 
     @property
     def names(self):
@@ -269,7 +264,7 @@ class SeriesGroupLemma(SeriesGroup):
         first_space = (1.0 - self.total_width) / 2.0 + (self.spacing / 2.0)
         for series_idx in range(len(self.series)):
             if self.series[series_idx].err is not None:
-                for x in range(0, 2):
+                for x in range(2):
                     axes.text(
                         x
                         + ((series_width + self.spacing) * series_idx)
@@ -454,9 +449,9 @@ def draw_histogram(area_df, olofsson_df, attr, output_file="foo.png"):
     )
 
     # Create the figure
-    x_title = "{} ({})".format(attr.field_name, attr.units)
+    x_title = f"{attr.field_name} ({attr.units})"
     figure = Histogram(
         series_group, labels, x_title=x_title, y_title="Area (ha)"
     )()
-    figure.savefig(output_file, edgecolor="k")
+    figure.savefig(output_file, edgecolor="k", dpi=250)
     plt.close(figure)

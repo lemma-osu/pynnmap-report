@@ -28,7 +28,7 @@ from .report_formatter import ReportFormatter, page_break
 
 def regional_image_fn(attr):
     """File name for regional accuracy histogram image"""
-    return "{}_area.png".format(attr.field_name.lower())
+    return f"{attr.field_name.lower()}_area.png"
 
 
 def create_regional_figures(area_df, olofsson_df, attrs):
@@ -119,7 +119,7 @@ class CategoricalAccuracyFormatter(ReportFormatter):
             distributions based on FIA plot estimates, GNN-based model
             predictions and the aforementioned Olofsson et al. (2013) 
             error-corrected area estimates (see explanation in continuous
-            attribute section.
+            attribute section).
             <br/><br/>
             In contrast to the continuous attributes, plot-based predictions
             for categorical attributes are constructed from the single

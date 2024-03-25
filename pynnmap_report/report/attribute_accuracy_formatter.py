@@ -29,7 +29,7 @@ from .accuracy_intro_formatter import AccuracyIntroductionFormatter
 
 def local_image_fn(attr):
     """File name for local accuracy scatterplot image"""
-    return "{}.png".format(attr.field_name.lower())
+    return f"{attr.field_name.lower()}.png"
 
 
 def create_local_figures(df, attrs):
@@ -47,7 +47,7 @@ def create_local_figures(df, attrs):
 
 def regional_image_fn(attr):
     """File name for regional accuracy histogram image"""
-    return "{}_area.png".format(attr.field_name.lower())
+    return f"{attr.field_name.lower()}_area.png"
 
 
 def create_regional_figures(area_df, olofsson_df, attrs):
@@ -65,7 +65,7 @@ def create_regional_figures(area_df, olofsson_df, attrs):
 
 def riemann_image_fn(attr, resolution):
     """File name for Riemann mid-scale accuracy image based on resolution"""
-    return "hex_{}_{}.png".format(resolution, attr.field_name.lower())
+    return f"hex_{resolution}_{attr.field_name.lower()}.png"
 
 
 def get_riemann_fn(riemann_dir, resolution, k=7, observed=True):
@@ -88,7 +88,7 @@ def create_riemann_figures(riemann_dir, k, attrs):
     attr_fields = [a.field_name for a in attrs]
     attr_fields.append("PLOT_COUNT")
     for resolution in (10, 30, 50):
-        id_field = "HEX_{}_ID".format(resolution)
+        id_field = f"HEX_{resolution}_ID"
         observed_file = get_riemann_fn(riemann_dir, resolution, observed=True)
         predicted_file = get_riemann_fn(
             riemann_dir, resolution, k=k, observed=False
@@ -100,12 +100,8 @@ def create_riemann_figures(riemann_dir, k, attrs):
             fn = riemann_image_fn(attr, resolution)
             kwargs = {
                 "kde": False,
-                "xlabel": "Predicted mean {} ({})".format(
-                    attr.field_name, attr.units
-                ),
-                "ylabel": "Observed mean {} ({})".format(
-                    attr.field_name, attr.units
-                ),
+                "xlabel": f"Predicted mean {attr.field_name} ({attr.units})",
+                "ylabel": f"Observed mean {attr.field_name} ({attr.units})",
                 "avg_plot_count": merged_df["PLOT_COUNT_O"].mean(),
                 "hexagon_count": len(merged_df),
             }

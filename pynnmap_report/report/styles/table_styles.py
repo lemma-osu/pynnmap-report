@@ -3,15 +3,16 @@ from reportlab.lib import colors
 
 
 def get_table_styles():
-    styles = dict()
-    styles["default"] = TableStyle(
-        [
-            ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("TOPPADDING", (0, 0), (-1, -1), 2),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
-        ]
-    )
+    styles = {
+        "default": TableStyle(
+            [
+                ("ALIGNMENT", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        )
+    }
 
     styles["default_shaded"] = TableStyle(
         [
