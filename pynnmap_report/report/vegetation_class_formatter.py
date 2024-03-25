@@ -26,6 +26,13 @@ class VegetationClassFormatter(ReportFormatter):
         self.stand_metadata_file = parameter_parser.stand_metadata_file
         self.check_missing_files()
 
+    def read_error_matrix(self) -> pd.DataFrame:
+        names = [f"P_{str(x)}" for x in range(1, 12)]
+        names.insert(0, "OBSERVED")
+        names.extend(["TOTAL", "CORRECT", "FUZZY_CORRECT"])
+        vc_df = pd.read_csv(self.vc_errmatrix_file, skiprows=1, names=names)
+        return vc_df.drop(columns=["OBSERVED"])
+
     def run_formatter(self):
         """
         Run formatter for the VEGCLASS attribute
@@ -58,9 +65,10 @@ class VegetationClassFormatter(ReportFormatter):
                 p.Paragraph.draw(self)
 
         # Section title
-        title_str = "<strong>Local-Scale Accuracy Assessment: "
-        title_str += "Error Matrix for Vegetation Classes at Plot "
-        title_str += "Locations</strong>"
+        title_str = (
+            "<strong>Local-Scale Accuracy Assessment: Error Matrix for"
+            " Vegetation Classes at Plot Locations</strong>"
+        )
 
         para = p.Paragraph(title_str, styles["section_style"])
         table = p.Table([[para]], colWidths=[10.0 * u.inch])
@@ -76,15 +84,10 @@ class VegetationClassFormatter(ReportFormatter):
                 ]
             )
         )
-        story.append(table)
-        story.append(p.Spacer(0, 0.1 * u.inch))
+        story.extend((table, p.Spacer(0, 0.1 * u.inch)))
 
         # Read in the vegclass error matrix
-        names = ["P_" + str(x) for x in range(1, 12)]
-        names.insert(0, "OBSERVED")
-        names.extend(["TOTAL", "CORRECT", "FUZZY_CORRECT"])
-        vc_df = pd.read_csv(self.vc_errmatrix_file, skiprows=1, names=names)
-        vc_df.drop(columns=["OBSERVED"], inplace=True)
+        vc_df = self.read_error_matrix()
 
         # Read in the stand attribute metadata
         metadata_parser = xsmp.XMLStandMetadataParser(self.stand_metadata_file)
@@ -93,25 +96,17 @@ class VegetationClassFormatter(ReportFormatter):
         vegclass_metadata = metadata_parser.get_attribute("VEGCLASS")
         vc_codes = vegclass_metadata.codes
 
-        # Create a list of lists to hold the vegclass table
-        vegclass_table = []
-
         # Add an empty row which will be a span row for the predicted label
-        header_row = []
-        for i in range(2):
-            header_row.append("")
+        header_row = ["" for _ in range(2)]
         prd_str = "<strong>Predicted Class</strong>"
         para = p.Paragraph(prd_str, styles["body_style_10_center"])
         header_row.append(para)
-        for i in range(len(vc_df) - 1):
-            header_row.append("")
-        vegclass_table.append(header_row)
+        header_row.extend(["" for _ in range(len(vc_df) - 1)])
+        vegclass_table = [header_row]
 
         # Add the predicted labels
         summary_labels = ("Total", "% Correct", "% FCorrect")
-        header_row = []
-        for i in range(2):
-            header_row.append("")
+        header_row = ["" for _ in range(2)]
         for code in vc_codes:
             label = re.sub("-", "-<br/>", code.label)
             para = p.Paragraph(label, styles["body_style_10_right"])
@@ -137,10 +132,9 @@ class VegetationClassFormatter(ReportFormatter):
         ]
 
         # Add the data
-        for (i, row) in enumerate(vc_df.itertuples(index=False)):
+        for i, row in enumerate(vc_df.itertuples(index=False)):
             vegclass_row = []
-            for (j, elem) in enumerate(row):
-
+            for j, elem in enumerate(row):
                 # Blank cells
                 if (i, j) in blank_cells:
                     elem_str = ""
@@ -175,11 +169,12 @@ class VegetationClassFormatter(ReportFormatter):
             vegclass_table.append(vegclass_row)
 
         # Set up the widths for the table cells
-        widths = [0.3, 0.85]
-        for i in range(len(vc_codes)):
-            widths.append(0.56)
-        for i in range(3):
-            widths.append(0.66)
+        widths = [
+            0.3,
+            0.85,
+            *[0.56 for _ in range(len(vc_codes))],
+            *[0.66 for _ in range(3)],
+        ]
         widths = [x * u.inch for x in widths]
 
         # Convert the vegclass table into a reportlab table
@@ -254,8 +249,7 @@ class VegetationClassFormatter(ReportFormatter):
                 )
 
         # Add this table to the story
-        story.append(table)
-        story.append(p.Spacer(0, 0.1 * u.inch))
+        story.extend((table, p.Spacer(0, 0.1 * u.inch)))
 
         # Explanation and definitions of vegetation class categories
         cell_str = """
@@ -268,8 +262,7 @@ class VegetationClassFormatter(ReportFormatter):
             included in the percent fuzzy correct.
         """
         para = p.Paragraph(cell_str, styles["body_style_9"])
-        story.append(para)
-        story.append(p.Spacer(0, 0.1 * u.inch))
+        story.extend((para, p.Spacer(0, 0.1 * u.inch)))
 
         head_str = """
             <strong>Vegetation Class (VEGCLASS) Definitions</strong> --
@@ -278,8 +271,7 @@ class VegetationClassFormatter(ReportFormatter):
             all dominant and codominant trees).
         """
         para = p.Paragraph(head_str, styles["body_style_9"])
-        story.append(para)
-        story.append(p.Spacer(0, 0.1 * u.inch))
+        story.append((para, p.Spacer(0, 0.1 * u.inch)))
 
         # Print out the vegclass code definitions
         for code in vc_codes:

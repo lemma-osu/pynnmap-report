@@ -87,7 +87,6 @@ class GnnDocTemplate(p.BaseDocTemplate):
         self.on_landscape = kwargs.get("on_landscape", _do_nothing)
 
     def build(self, flowables, filename, canvasmaker=canvas.Canvas):
-
         # Recalculate in case we changed margins, sizes, etc
         self._calc()
 

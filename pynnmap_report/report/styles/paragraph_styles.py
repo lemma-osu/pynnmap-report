@@ -10,14 +10,15 @@ from .fonts import FONTS
 def get_garamond_styles(font_dict):
     regular, bold = font_dict["regular"], font_dict["bold"]
     lead_multiplier = 1.20
-    styles = dict()
-    styles["body_style"] = ParagraphStyle(
-        name="Normal",
-        fontName=regular,
-        fontSize=11.5,
-        leading=11.5 * lead_multiplier,
-        alignment=enums.TA_LEFT,
-    )
+    styles = {
+        "body_style": ParagraphStyle(
+            name="Normal",
+            fontName=regular,
+            fontSize=11.5,
+            leading=11.5 * lead_multiplier,
+            alignment=enums.TA_LEFT,
+        )
+    }
 
     styles["body_style_right"] = ParagraphStyle(
         name="BodyRight",
@@ -132,14 +133,15 @@ def get_garamond_styles(font_dict):
 def get_open_sans_styles(font_dict):
     regular, bold = font_dict["regular"], font_dict["bold"]
     lead_multiplier = 1.40
-    styles = dict()
-    styles["body_style"] = ParagraphStyle(
-        name="Normal",
-        fontName=regular,
-        fontSize=10.0,
-        leading=10.0 * lead_multiplier,
-        alignment=enums.TA_LEFT,
-    )
+    styles = {
+        "body_style": ParagraphStyle(
+            name="Normal",
+            fontName=regular,
+            fontSize=10.0,
+            leading=10.0 * lead_multiplier,
+            alignment=enums.TA_LEFT,
+        )
+    }
 
     styles["body_style_right"] = ParagraphStyle(
         name="BodyRight",

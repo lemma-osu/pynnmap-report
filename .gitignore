@@ -5,6 +5,7 @@ dist
 *.pyc
 
 # Miscellaneous files
+.sourcery.yaml
 .idea
 .vscode
 *.swp

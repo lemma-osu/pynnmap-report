@@ -12,7 +12,6 @@ from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 
 class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
-
     def __init__(self, parameter_parser):
         super(RegionalAccuracyFormatter, self).__init__()
         pp = parameter_parser
@@ -26,7 +25,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         try:
             self.check_missing_files(files)
         except report_formatter.MissingConstraintError as e:
-            e.message += '\nSkipping RegionalAccuracyFormatter\n'
+            e.message += "\nSkipping RegionalAccuracyFormatter\n"
             raise e
 
     def run_formatter(self):
@@ -37,14 +36,12 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         return self._create_story(self.histogram_files)
 
     def clean_up(self):
-
         # Remove the histograms
         for fn in self.histogram_files:
             if os.path.exists(fn):
                 os.remove(fn)
 
     def _create_histograms(self):
-
         # Open the area estimate file into a recarray
         ae_data = pd.read_csv(self.regional_accuracy_file)
 
@@ -53,11 +50,15 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
         # Subset the attributes to those that are accuracy attributes,
         # are identified to go into the report, and are not species variables
-        attrs = []
-        for attr in mp.attributes:
-            if attr.is_accuracy_attr() and attr.is_project_attr() and \
-                    not attr.is_species_attr():
-                attrs.append(attr.field_name)
+        attrs = [
+            attr.field_name
+            for attr in mp.attributes
+            if (
+                attr.is_accuracy_attr()
+                and attr.is_project_attr()
+                and not attr.is_species_attr()
+            )
+        ]
 
         # Iterate over the attributes and create a histogram file of each
         histogram_files = []
@@ -66,8 +67,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             metadata = mp.get_attribute(attr)
 
             # Get the observed and predicted data for this attribute
-            obs_vals = self._get_histogram_data(ae_data, attr, 'OBSERVED')
-            prd_vals = self._get_histogram_data(ae_data, attr, 'PREDICTED')
+            obs_vals = self._get_histogram_data(ae_data, attr, "OBSERVED")
+            prd_vals = self._get_histogram_data(ae_data, attr, "PREDICTED")
 
             if len(obs_vals) == 0:
                 continue
@@ -79,16 +80,20 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
             # Set the bin names (same for both observed and predicted series)
             bin_names = obs_vals.BIN_NAME
             if not np.array_equal(bin_names.values, prd_vals.BIN_NAME.values):
-                err_msg = 'Bin names are not the same for ' + attr
+                err_msg = "Bin names are not the same for " + attr
                 raise ValueError(err_msg)
 
             # Create the output file name
-            output_file = attr.lower() + '_histogram.png'
+            output_file = attr.lower() + "_histogram.png"
 
             # Create the histogram
             mplf.draw_histogram(
-                [obs_area, prd_area], bin_names, metadata,
-                output_type=mplf.FILE, output_file=output_file)
+                [obs_area, prd_area],
+                bin_names,
+                metadata,
+                output_type=mplf.FILE,
+                output_file=output_file,
+            )
 
             # Add this to the list of histogram files
             histogram_files.append(output_file)
@@ -102,7 +107,6 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         return ae_data[conds]
 
     def _create_story(self, histogram_files):
-
         # Set up an empty list to hold the story
         story = []
 
@@ -113,14 +117,14 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
         story = self._make_page_break(story, self.PORTRAIT)
 
         # Section title
-        title_str = '<strong>Regional-Scale Accuracy Assessment:<br/> Area '
-        title_str += 'Distributions from Regional Inventory Plots vs. '
-        title_str += 'GNN</strong>'
-        story.append(self._make_title(title_str))
-        story.append(p.Spacer(0, 0.20 * u.inch))
+        title_str = (
+            "<strong>Regional-Scale Accuracy Assessment:<br/> Area"
+            " Distributions from Regional Inventory Plots vs. GNN</strong>"
+        )
+        story.extend((self._make_title(title_str), p.Spacer(0, 0.20 * u.inch)))
 
         # Histogram explanation
-        histo_str = '''
+        histo_str = """
             These histograms compare the distributions of land area in
             different vegetation conditions as estimated from a regional,
             sample- (plot-) based inventory (FIA Annual Plots) to model
@@ -153,8 +157,8 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
             For the plots, the 'nonforest' bar represents the nonforest area
             as estimated from the FIA Annual sample.
-        '''
-        story.append(p.Paragraph(histo_str, styles['body_style']))
+        """
+        story.append(p.Paragraph(histo_str, styles["body_style"]))
         story.append(p.Spacer(0, 0.1 * u.inch))
 
         # Create a table of histograms and add to story
