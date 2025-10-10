@@ -178,17 +178,17 @@ class AttributeAccuracyFormatter(ReportFormatter):
         fn = attr.field_name
 
         # Get the subsets of the dataframes associated with this attribute
-        em_data = self.error_matrix_df[fn == self.error_matrix_df.VARIABLE]
-        bins = self.bins_df[fn == self.bins_df.VARIABLE]
+        em_data = self.error_matrix_df[self.error_matrix_df["VARIABLE"] == fn]
+        bins = self.bins_df[self.bins_df["VARIABLE"] == fn]
 
         # Construct the error matrix and get row/column totals
         cats = np.arange(1, len(bins) + 1)
-        obs = pd.Categorical(em_data.OBSERVED_CLASS, categories=cats)
-        prd = pd.Categorical(em_data.PREDICTED_CLASS, categories=cats)
+        obs = pd.Categorical(em_data["OBSERVED_CLASS"], categories=cats)
+        prd = pd.Categorical(em_data["PREDICTED_CLASS"], categories=cats)
         err_matrix = pd.crosstab(
             index=obs,
             columns=prd,
-            values=np.array(em_data.COUNT),
+            values=np.array(em_data["COUNT"]),
             aggfunc=sum,
             margins=True,
             dropna=False,
@@ -219,8 +219,8 @@ class AttributeAccuracyFormatter(ReportFormatter):
 
                 return f"{_reg(low)}-{_reg(high)}"
 
-            func = exp_range if bin_df.HIGH.max() > 1000.0 else reg_range
-            return [func(low, high) for low, high in zip(bin_df.LOW, bin_df.HIGH)]
+            func = exp_range if bin_df["HIGH"].max() > 1000.0 else reg_range
+            return [func(low, high) for low, high in zip(bin_df["LOW"], bin_df["HIGH"])]
 
         bin_labels = np.array(
             get_labels(bins) + ["Total", "% correct", "% fuzzy correct"]

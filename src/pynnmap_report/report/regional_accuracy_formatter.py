@@ -73,12 +73,12 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
                 continue
 
             # Set the areas for the observed and predicted data
-            obs_area = obs_vals.AREA
-            prd_area = prd_vals.AREA
+            obs_area = obs_vals["AREA"]
+            prd_area = prd_vals["AREA"]
 
             # Set the bin names (same for both observed and predicted series)
-            bin_names = obs_vals.BIN_NAME
-            if not np.array_equal(bin_names.values, prd_vals.BIN_NAME.values):
+            bin_names = obs_vals["BIN_NAME"]
+            if not np.array_equal(bin_names.values, prd_vals["BIN_NAME"].values):
                 err_msg = "Bin names are not the same for " + attr
                 raise ValueError(err_msg)
 
@@ -102,7 +102,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
     @staticmethod
     def _get_histogram_data(ae_data, attr, dataset):
-        conds = (attr == ae_data.VARIABLE) & (dataset == ae_data.DATASET)
+        conds = (attr == ae_data["VARIABLE"]) & (dataset == ae_data["DATASET"])
         return ae_data[conds]
 
     def _create_story(self, histogram_files):

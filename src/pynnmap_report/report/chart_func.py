@@ -422,14 +422,14 @@ def draw_histogram(area_df, olofsson_df, attr, output_file="foo.png"):
     Render a histogram from LEMMA paired dataframe using the specified
     attribute
     """
-    attr_df = area_df[attr.field_name == area_df.VARIABLE]
-    obs = attr_df[attr_df.DATASET == "OBSERVED"].AREA
-    prd = attr_df[attr_df.DATASET == "PREDICTED"].AREA
-    labels = attr_df[attr_df.DATASET == "OBSERVED"].BIN_NAME
+    attr_df = area_df[area_df["VARIABLE"] == attr.field_name]
+    obs = attr_df[attr_df["DATASET"] == "OBSERVED"]["AREA"]
+    prd = attr_df[attr_df["DATASET"] == "PREDICTED"]["AREA"]
+    labels = attr_df[attr_df["DATASET"] == "OBSERVED"]["BIN_NAME"]
 
-    adjusted_df = olofsson_df[attr.field_name == olofsson_df.VARIABLE]
-    error_adjusted = np.hstack(([0.0, 0.0], adjusted_df.ADJUSTED))
-    ci_adjusted = np.hstack(([0.0, 0.0], adjusted_df.CI_ADJUSTED))
+    adjusted_df = olofsson_df[olofsson_df["VARIABLE"] == attr.field_name]
+    error_adjusted = np.hstack(([0.0, 0.0], adjusted_df["ADJUSTED"]))
+    ci_adjusted = np.hstack(([0.0, 0.0], adjusted_df["CI_ADJUSTED"]))
 
     series_group = SeriesGroupLemma(
         [

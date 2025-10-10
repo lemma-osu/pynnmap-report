@@ -77,17 +77,17 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         spp_df: pd.DataFrame,
         metadata: xrmp.XMLReportMetadataParser = None,
     ) -> list[Any]:
-        spp_data = spp_df[spp == spp_df.SPECIES].squeeze()
+        spp_data = spp_df[spp_df["SPECIES"] == spp].squeeze()
         plot_counts = [
             getattr(spp_data, x) for x in ("OP_PP", "OP_PA", "OA_PP", "OA_PA")
         ]
         return [
             self.species_name(spp, metadata),
             p.Paragraph(
-                f"{spp_data.PREVALENCE:.4f}", self.styles["contact_style_right"]
+                f"{spp_data['PREVALENCE']:.4f}", self.styles["contact_style_right"]
             ),
             self.count_table(plot_counts),
-            p.Paragraph(f"{spp_data.KAPPA:.4f}", self.styles["contact_style_right"]),
+            p.Paragraph(f"{spp_data['KAPPA']:.4f}", self.styles["contact_style_right"]),
         ]
 
     def run_formatter(self):
@@ -189,7 +189,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         ]
 
         # Subset species to just those with 0.5% prevalence
-        common_species = spp_df[spp_df.PREVALENCE >= 0.005].SPECIES
+        common_species = spp_df[spp_df["PREVALENCE"] >= 0.005]["SPECIES"]
         attrs = sorted(list(set(attrs) & set(common_species)))
 
         # Build the table with accuracy information

@@ -68,8 +68,8 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         #   of 0 (missing spatial data in one or more covariates).  This
         #   makes its way into the area_df and that olofsson_df.  Strip out
         #   all records with "Unknown"
-        self.area_df = self.area_df[self.area_df.BIN_NAME != "Unknown"]
-        self.olofsson_df = self.olofsson_df[self.olofsson_df.CLASS != "Unknown"]
+        self.area_df = self.area_df[self.area_df["BIN_NAME"] != "Unknown"]
+        self.olofsson_df = self.olofsson_df[self.olofsson_df["CLASS"] != "Unknown"]
 
     def run_formatter(self):
         """
@@ -153,17 +153,17 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         fn = attr.field_name
 
         # Get the subsets of the dataframes associated with this attribute
-        em_data = self.error_matrix_df[fn == self.error_matrix_df.VARIABLE]
+        em_data = self.error_matrix_df[fn == self.error_matrix_df["VARIABLE"]]
         bins = [x.label for x in attr.codes]
 
         # Construct the error matrix and get row/column totals
         cats = np.arange(1, len(bins) + 1)
-        obs = pd.Categorical(em_data.OBSERVED_CLASS, categories=cats)
-        prd = pd.Categorical(em_data.PREDICTED_CLASS, categories=cats)
+        obs = pd.Categorical(em_data["OBSERVED_CLASS"], categories=cats)
+        prd = pd.Categorical(em_data["PREDICTED_CLASS"], categories=cats)
         err_matrix = pd.crosstab(
             index=obs,
             columns=prd,
-            values=np.array(em_data.COUNT),
+            values=np.array(em_data["COUNT"]),
             aggfunc=sum,
             margins=True,
             dropna=False,
