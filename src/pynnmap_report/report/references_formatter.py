@@ -1,6 +1,7 @@
 """
 Formatter to add citations to report
 """
+
 from reportlab import platypus as p
 from reportlab.lib import units as u
 
@@ -14,7 +15,7 @@ class ReferencesFormatter(report_formatter.ReportFormatter):
     """
 
     def __init__(self):
-        super(ReferencesFormatter, self).__init__()
+        super().__init__()
 
     def run_formatter(self):
         """Run the formatter"""

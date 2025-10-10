@@ -1,17 +1,15 @@
 """
 Definition of formatter base class
 """
+
 import re
 
-from reportlab import platypus as p
-from reportlab.lib import colors
-from reportlab.lib import units as u
-
 from pynnmap.misc import utilities
+from reportlab import platypus as p
+from reportlab.lib import units as u
 
 from .styles.paragraph_styles import get_paragraph_styles
 from .styles.table_styles import get_table_styles
-
 
 STYLES = get_paragraph_styles("Open-Sans")
 
@@ -82,7 +80,7 @@ class ReportFormatter:
     the accuracy assessment report.
     """
 
-    _required = []
+    _required: list[str] = []
 
     # Set up an enumeration for the different pages
     (TITLE, PORTRAIT, LANDSCAPE) = ("title", "portrait", "landscape")

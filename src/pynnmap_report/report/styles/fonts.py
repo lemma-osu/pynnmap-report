@@ -54,9 +54,7 @@ def load_fonts():
             "regular": register_font("Trebuchet", "trebuc.ttf"),
             "bold": register_font("Trebuchet-Bold", "trebucbd.ttf"),
             "italic": register_font("Trebuchet-Italic", "trebucit.ttf"),
-            "bold_italic": register_font(
-                "Trebuchet-Bold-Italic", "trebucbi.ttf"
-            ),
+            "bold_italic": register_font("Trebuchet-Bold-Italic", "trebucbi.ttf"),
         },
         "Open-Sans": {
             "regular": register_custom_font(

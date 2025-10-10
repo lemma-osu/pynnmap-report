@@ -2,18 +2,17 @@ import os
 
 import numpy as np
 import pandas as pd
+from pynnmap.misc import mpl_figures as mplf
+from pynnmap.parser import xml_stand_metadata_parser as xsmp
 from reportlab import platypus as p
 from reportlab.lib import units as u
 
-from pynnmap_report.report import report_formatter
-from pynnmap_report.report import report_styles
-from pynnmap.misc import mpl_figures as mplf
-from pynnmap.parser import xml_stand_metadata_parser as xsmp
+from pynnmap_report.report import report_formatter, report_styles
 
 
 class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
     def __init__(self, parameter_parser):
-        super(RegionalAccuracyFormatter, self).__init__()
+        super().__init__()
         pp = parameter_parser
         self.regional_accuracy_file = pp.regional_accuracy_file
         self.stand_metadata_file = pp.stand_metadata_file
@@ -74,12 +73,12 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
                 continue
 
             # Set the areas for the observed and predicted data
-            obs_area = obs_vals.AREA
-            prd_area = prd_vals.AREA
+            obs_area = obs_vals["AREA"]
+            prd_area = prd_vals["AREA"]
 
             # Set the bin names (same for both observed and predicted series)
-            bin_names = obs_vals.BIN_NAME
-            if not np.array_equal(bin_names.values, prd_vals.BIN_NAME.values):
+            bin_names = obs_vals["BIN_NAME"]
+            if not np.array_equal(bin_names.values, prd_vals["BIN_NAME"].values):
                 err_msg = "Bin names are not the same for " + attr
                 raise ValueError(err_msg)
 
@@ -103,7 +102,7 @@ class RegionalAccuracyFormatter(report_formatter.ReportFormatter):
 
     @staticmethod
     def _get_histogram_data(ae_data, attr, dataset):
-        conds = (ae_data.VARIABLE == attr) & (ae_data.DATASET == dataset)
+        conds = (attr == ae_data["VARIABLE"]) & (dataset == ae_data["DATASET"])
         return ae_data[conds]
 
     def _create_story(self, histogram_files):

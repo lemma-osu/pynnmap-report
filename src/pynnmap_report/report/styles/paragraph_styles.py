@@ -1,7 +1,9 @@
 """
 Paragraph styles used in report creation
 """
-from reportlab.lib import enums, units as u
+
+from reportlab.lib import enums
+from reportlab.lib import units as u
 from reportlab.lib.styles import ParagraphStyle
 
 from .fonts import FONTS

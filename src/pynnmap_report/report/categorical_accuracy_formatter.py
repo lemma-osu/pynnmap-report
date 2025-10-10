@@ -1,12 +1,18 @@
 """
 Categorical accuracy formatter showing a subset of the information
 """
+
 import os
 from collections import defaultdict
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
+from pynnmap.misc.classification_accuracy import Classification, Classifier
+from pynnmap.parser.xml_stand_metadata_parser import (
+    Flags,
+    XMLStandMetadataParser,
+)
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     Image,
@@ -14,12 +20,6 @@ from reportlab.platypus import (
     Paragraph,
     Spacer,
     Table,
-)
-
-from pynnmap.misc.classification_accuracy import Classifier, Classification
-from pynnmap.parser.xml_stand_metadata_parser import (
-    Flags,
-    XMLStandMetadataParser,
 )
 
 from . import chart_func as cf
@@ -59,9 +59,7 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         self.k = parameter_parser.k
         self.image_files = []
 
-        self.error_matrix_df = pd.read_csv(
-            parameter_parser.error_matrix_accuracy_file
-        )
+        self.error_matrix_df = pd.read_csv(parameter_parser.error_matrix_accuracy_file)
         self.bins_df = pd.read_csv(parameter_parser.error_matrix_bin_file)
         self.area_df = pd.read_csv(parameter_parser.regional_accuracy_file)
         self.olofsson_df = pd.read_csv(parameter_parser.regional_olofsson_file)
@@ -70,8 +68,8 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         #   of 0 (missing spatial data in one or more covariates).  This
         #   makes its way into the area_df and that olofsson_df.  Strip out
         #   all records with "Unknown"
-        self.area_df = self.area_df[self.area_df.BIN_NAME != "Unknown"]
-        self.olofsson_df = self.olofsson_df[self.olofsson_df.CLASS != "Unknown"]
+        self.area_df = self.area_df[self.area_df["BIN_NAME"] != "Unknown"]
+        self.olofsson_df = self.olofsson_df[self.olofsson_df["CLASS"] != "Unknown"]
 
     def run_formatter(self):
         """
@@ -155,17 +153,17 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         fn = attr.field_name
 
         # Get the subsets of the dataframes associated with this attribute
-        em_data = self.error_matrix_df[self.error_matrix_df.VARIABLE == fn]
+        em_data = self.error_matrix_df[fn == self.error_matrix_df["VARIABLE"]]
         bins = [x.label for x in attr.codes]
 
         # Construct the error matrix and get row/column totals
         cats = np.arange(1, len(bins) + 1)
-        obs = pd.Categorical(em_data.OBSERVED_CLASS, categories=cats)
-        prd = pd.Categorical(em_data.PREDICTED_CLASS, categories=cats)
+        obs = pd.Categorical(em_data["OBSERVED_CLASS"], categories=cats)
+        prd = pd.Categorical(em_data["PREDICTED_CLASS"], categories=cats)
         err_matrix = pd.crosstab(
             index=obs,
             columns=prd,
-            values=np.array(em_data.COUNT),
+            values=np.array(em_data["COUNT"]),
             aggfunc=sum,
             margins=True,
             dropna=False,
@@ -174,7 +172,7 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         # Create a new buffered array to accommodate labels and accuracy and
         # copy in the calculated error matrix
         n_cells, _ = err_matrix.shape
-        arr = np.empty((n_cells + 4, n_cells + 4), dtype=np.object)
+        arr = np.empty((n_cells + 4, n_cells + 4), dtype=object)
         arr[:] = ""
 
         # Label the axes
@@ -191,9 +189,9 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         # Calculate row/column/total percent correct
         diag = np.diag(err_matrix)[:-1]
         row_sums, col_sums = err_matrix[-1, :-1], err_matrix[:-1, -1]
-        out = np.zeros_like(diag, dtype=np.float)
+        out = np.zeros_like(diag, dtype=float)
         pct_r = np.divide(diag, row_sums, out=out, where=row_sums != 0)
-        out = np.zeros_like(diag, dtype=np.float)
+        out = np.zeros_like(diag, dtype=float)
         pct_c = np.divide(diag, col_sums, out=out, where=col_sums != 0)
         arr[-2, 2 : n_cells + 1] = pct_r * 100.0
         arr[2 : n_cells + 1, -2] = pct_c * 100.0
@@ -230,9 +228,7 @@ class CategoricalAccuracyFormatter(ReportFormatter):
                     classification = Classification(i, f"{i}", [i - 1, i])
                     fuzzy_cells.append((i, i - 1))
                 else:
-                    classification = Classification(
-                        i, f"{i}", [i - 1, i, i + 1]
-                    )
+                    classification = Classification(i, f"{i}", [i - 1, i, i + 1])
                     fuzzy_cells.append((i, i - 1))
                     fuzzy_cells.append((i, i + 1))
                 classifiers[i] = classification
@@ -298,12 +294,12 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         # For all others, just turn into paragraphs based on type
         def to_paragraph(x, style):
             try:
-                return Paragraph("{:d}".format(x), style)
+                return Paragraph(f"{x:d}", style)
             except ValueError:
                 try:
-                    return Paragraph("{:.1f}".format(x), style)
+                    return Paragraph(f"{x:.1f}", style)
                 except ValueError:
-                    return Paragraph("{}".format(x), style)
+                    return Paragraph(f"{x}", style)
 
         paragraph_cells = np.vectorize(to_paragraph, excluded=["style"])
         arr[2:, 1:] = paragraph_cells(arr[2:, 1:], em_style)
@@ -318,11 +314,7 @@ class CategoricalAccuracyFormatter(ReportFormatter):
             ):
                 available = total_spacing - (label_spacing + names_spacing)
                 standard = min(0.5 * inch, available / (n_elem - 2))
-                return (
-                    [label_spacing]
-                    + [names_spacing]
-                    + [standard] * (n_elem - 2)
-                )
+                return [label_spacing] + [names_spacing] + [standard] * (n_elem - 2)
 
             n_rows, n_cols = data.shape
             widths = get_spacing(7.5 * inch, n_cols)
@@ -365,16 +357,8 @@ class CategoricalAccuracyFormatter(ReportFormatter):
         regional_fn = regional_image_fn(attr)
 
         title = attr.field_name + " (units: " + attr.units + ")"
-        table_style = [
-            ("LEFTPADDING", (0, 0), (0, 0), 0),
-            ("TOPPADDING", (0, 0), (-1, -1), 0),
-            ("RIGHTPADDING", (-1, -1), (-1, -1), 0),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-        ]
         default_style = self.styles["body_11"]
         title_style = self.styles["body_16"]
-        subheading_style = self.styles["subheading"]
 
         return [
             PageBreak(),

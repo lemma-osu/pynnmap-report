@@ -1,15 +1,14 @@
 """
 Formatter to report species accuracy including kappas
 """
-from typing import Any, List
+
+from typing import Any
 
 import pandas as pd
-from reportlab import platypus as p
-from reportlab.lib import colors
-from reportlab.lib import units as u
-
 from pynnmap.parser import xml_report_metadata_parser as xrmp
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
+from reportlab import platypus as p
+from reportlab.lib import units as u
 
 from .report_formatter import ReportFormatter, page_break
 
@@ -22,7 +21,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
     _required = ["species_accuracy_file", "stand_metadata_file"]
 
     def __init__(self, parameter_parser):
-        super(SpeciesAccuracyFormatter, self).__init__()
+        super().__init__()
         self.species_accuracy_file = parameter_parser.species_accuracy_file
         self.stand_metadata_file = parameter_parser.stand_metadata_file
         self.report_metadata_file = parameter_parser.report_metadata_file
@@ -60,7 +59,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
             spp_str = spp
         return p.Paragraph(spp_str, self.styles["contact_style"])
 
-    def count_table(self, plot_counts: List[int]) -> p.Table:
+    def count_table(self, plot_counts: list[int]) -> p.Table:
         def _paragraph(value: int) -> p.Paragraph:
             return p.Paragraph(f"{value}", self.styles["contact_style_right"])
 
@@ -77,20 +76,18 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         spp: str,
         spp_df: pd.DataFrame,
         metadata: xrmp.XMLReportMetadataParser = None,
-    ) -> List[Any]:
-        spp_data = spp_df[spp_df.SPECIES == spp].squeeze()
+    ) -> list[Any]:
+        spp_data = spp_df[spp_df["SPECIES"] == spp].squeeze()
         plot_counts = [
             getattr(spp_data, x) for x in ("OP_PP", "OP_PA", "OA_PP", "OA_PA")
         ]
         return [
             self.species_name(spp, metadata),
             p.Paragraph(
-                f"{spp_data.PREVALENCE:.4f}", self.styles["contact_style_right"]
+                f"{spp_data['PREVALENCE']:.4f}", self.styles["contact_style_right"]
             ),
             self.count_table(plot_counts),
-            p.Paragraph(
-                f"{spp_data.KAPPA:.4f}", self.styles["contact_style_right"]
-            ),
+            p.Paragraph(f"{spp_data['KAPPA']:.4f}", self.styles["contact_style_right"]),
         ]
 
     def run_formatter(self):
@@ -101,10 +98,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         story = page_break(self.PORTRAIT)
 
         # Section title
-        title = (
-            "Local-Scale Accuracy Assessment:\n"
-            "Species Accuracy at Plot Locations"
-        )
+        title = "Local-Scale Accuracy Assessment:\nSpecies Accuracy at Plot Locations"
         story.extend(self.create_section_title(title))
 
         # Species introduction
@@ -161,8 +155,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         )
 
         spp_str = (
-            "<strong>Species PLANTS Code<br/>Scientific Name / Common"
-            " Name</strong>"
+            "<strong>Species PLANTS Code<br/>Scientific Name / Common Name</strong>"
         )
         header_row = [p.Paragraph(spp_str, self.styles["contact_style"])]
 
@@ -196,7 +189,7 @@ class SpeciesAccuracyFormatter(ReportFormatter):
         ]
 
         # Subset species to just those with 0.5% prevalence
-        common_species = spp_df[spp_df.PREVALENCE >= 0.005].SPECIES
+        common_species = spp_df[spp_df["PREVALENCE"] >= 0.005]["SPECIES"]
         attrs = sorted(list(set(attrs) & set(common_species)))
 
         # Build the table with accuracy information

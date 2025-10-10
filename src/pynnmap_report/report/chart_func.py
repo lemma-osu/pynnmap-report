@@ -1,14 +1,13 @@
 """
 Chart classes for creating scatterplots and histograms
 """
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import font_manager, patches
-from scipy.stats import gaussian_kde
-
 from pynnmap.misc import statistics
-
+from scipy.stats import gaussian_kde
 
 mpl.rcParams["font.family"] = "Open Sans"
 
@@ -71,10 +70,10 @@ class Scatterplot:
         if self.max > 1000.0:
             labels = []
             for tick in ticks:
-                base, exponent = "{:.1e}".format(tick).split("e")
-                labels.append("{:.1f}e{:d}".format(float(base), int(exponent)))
+                base, exponent = f"{tick:.1e}".split("e")
+                labels.append(f"{float(base):.1f}e{int(exponent):d}")
         else:
-            labels = ["{:.1f}".format(tick) for tick in ticks]
+            labels = [f"{tick:.1f}" for tick in ticks]
         axes.set_xticks(ticks)
         axes.set_xticklabels(labels, size=4.5)
         axes.set_yticks(ticks)
@@ -112,12 +111,8 @@ class ObservedPredictedScatterplot(Scatterplot):
     """
 
     def _draw_1_to_1(self, axes):
-        plt.plot(
-            [self.min, self.max], [self.min, self.max], "k-", linewidth=0.5
-        )
-        plt.text(
-            0.89, 0.93, "1:1", transform=axes.transAxes, size=4.5, rotation=45
-        )
+        plt.plot([self.min, self.max], [self.min, self.max], "k-", linewidth=0.5)
+        plt.text(0.89, 0.93, "1:1", transform=axes.transAxes, size=4.5, rotation=45)
 
     def _draw(self, x, y, z, **kwargs):
         super()._draw(y, x, z, **kwargs)
@@ -240,9 +235,7 @@ class SeriesGroup:
         bin_idx = np.arange(len(self.series[0]))
         for series_idx in range(len(self.series)):
             axes.bar(
-                bin_idx
-                + ((series_width + self.spacing) * series_idx)
-                + first_space,
+                bin_idx + ((series_width + self.spacing) * series_idx) + first_space,
                 self.series[series_idx].values,
                 color=self.COLORS[series_idx],
                 linewidth=0.0,
@@ -393,9 +386,7 @@ class Histogram:
         frame_width, frame_height = 0.90, 0.83
 
         # Figure out if x labels need to be rotated
-        rotation, max_label = self.labels.get_label_rotation(
-            self.figure, frame_width
-        )
+        rotation, max_label = self.labels.get_label_rotation(self.figure, frame_width)
         plt.setp(self.axes.get_xticklabels(), "rotation", rotation)
 
         # Adjustment factor is based on rotation angle and max_label
@@ -431,14 +422,14 @@ def draw_histogram(area_df, olofsson_df, attr, output_file="foo.png"):
     Render a histogram from LEMMA paired dataframe using the specified
     attribute
     """
-    attr_df = area_df[area_df.VARIABLE == attr.field_name]
-    obs = attr_df[attr_df.DATASET == "OBSERVED"].AREA
-    prd = attr_df[attr_df.DATASET == "PREDICTED"].AREA
-    labels = attr_df[attr_df.DATASET == "OBSERVED"].BIN_NAME
+    attr_df = area_df[area_df["VARIABLE"] == attr.field_name]
+    obs = attr_df[attr_df["DATASET"] == "OBSERVED"]["AREA"]
+    prd = attr_df[attr_df["DATASET"] == "PREDICTED"]["AREA"]
+    labels = attr_df[attr_df["DATASET"] == "OBSERVED"]["BIN_NAME"]
 
-    adjusted_df = olofsson_df[olofsson_df.VARIABLE == attr.field_name]
-    error_adjusted = np.hstack(([0.0, 0.0], adjusted_df.ADJUSTED))
-    ci_adjusted = np.hstack(([0.0, 0.0], adjusted_df.CI_ADJUSTED))
+    adjusted_df = olofsson_df[olofsson_df["VARIABLE"] == attr.field_name]
+    error_adjusted = np.hstack(([0.0, 0.0], adjusted_df["ADJUSTED"]))
+    ci_adjusted = np.hstack(([0.0, 0.0], adjusted_df["CI_ADJUSTED"]))
 
     series_group = SeriesGroupLemma(
         [
@@ -450,8 +441,6 @@ def draw_histogram(area_df, olofsson_df, attr, output_file="foo.png"):
 
     # Create the figure
     x_title = f"{attr.field_name} ({attr.units})"
-    figure = Histogram(
-        series_group, labels, x_title=x_title, y_title="Area (ha)"
-    )()
+    figure = Histogram(series_group, labels, x_title=x_title, y_title="Area (ha)")()
     figure.savefig(output_file, edgecolor="k", dpi=250)
     plt.close(figure)
