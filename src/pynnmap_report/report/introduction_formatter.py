@@ -173,7 +173,7 @@ class IntroductionFormatter(ReportFormatter):
         # Model region area
         locale.setlocale(locale.LC_ALL, "")
         mr_area_ha = rmp.model_region_area
-        mr_area_ac = mr_area_ha * self["ACRES_PER_HECTARE"]
+        mr_area_ac = mr_area_ha * self.ACRES_PER_HECTARE
         mr_area_str = (
             "<strong>Model Region Area:</strong>"
             f" {locale.format('%d', mr_area_ha, True)} hectares"
@@ -182,7 +182,7 @@ class IntroductionFormatter(ReportFormatter):
 
         # Forest area
         forest_area_ha = rmp.forest_area
-        forest_area_ac = forest_area_ha * self["ACRES_PER_HECTARE"]
+        forest_area_ac = forest_area_ha * self.ACRES_PER_HECTARE
         forest_area_str = (
             "<strong>Forest Area:</strong> {} hectares ({} acres) - {:.1f}%"
         ).format(
