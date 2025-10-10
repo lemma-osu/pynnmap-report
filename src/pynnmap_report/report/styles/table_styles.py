@@ -1,5 +1,5 @@
-from reportlab.platypus import TableStyle
 from reportlab.lib import colors
+from reportlab.platypus import TableStyle
 
 
 def get_table_styles():

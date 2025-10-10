@@ -1,19 +1,20 @@
 """
 LEMMA GNN accuracy report with one page per attribute
 """
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
-from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame
 from reportlab.pdfgen.canvas import Canvas
+from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
 
-from .config import GNN_RELEASE_VERSION
-from .styles.fonts import FONTS
-from .introduction_formatter import IntroductionFormatter
 from .attribute_accuracy_formatter import AttributeAccuracyFormatter
 from .categorical_accuracy_formatter import CategoricalAccuracyFormatter
-from .species_accuracy_formatter import SpeciesAccuracyFormatter
+from .config import GNN_RELEASE_VERSION
 from .data_dictionary_formatter import DataDictionaryFormatter
+from .introduction_formatter import IntroductionFormatter
 from .references_formatter import ReferencesFormatter
+from .species_accuracy_formatter import SpeciesAccuracyFormatter
+from .styles.fonts import FONTS
 
 
 class PageNumCanvas(Canvas):
@@ -57,9 +58,7 @@ class LemmaAccuracyReport:
         parser = self.parameter_parser
 
         # Set up the document template
-        doc = BaseDocTemplate(
-            parser.accuracy_assessment_report, pagesize=letter
-        )
+        doc = BaseDocTemplate(parser.accuracy_assessment_report, pagesize=letter)
 
         # Add the page template
         doc.addPageTemplates(

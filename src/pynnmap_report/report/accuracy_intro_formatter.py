@@ -7,16 +7,16 @@ from reportlab.platypus import (
     Table,
 )
 
-from .report_formatter import ReportFormatter, page_break
 from .. import (
-    PLOT_DIAGRAM,
-    LOCAL_SCATTER,
     ERROR_MATRIX,
-    REGIONAL_HISTOGRAM,
     HEX_10_SCATTER,
     HEX_30_SCATTER,
     HEX_50_SCATTER,
+    LOCAL_SCATTER,
+    PLOT_DIAGRAM,
+    REGIONAL_HISTOGRAM,
 )
+from .report_formatter import ReportFormatter, page_break
 
 
 class AccuracyIntroductionFormatter(ReportFormatter):
@@ -84,9 +84,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
         """
         flowables.extend(
             [
-                Paragraph(
-                    "Local (Plot) Scale Accuracy", self.styles["heading_style"]
-                ),
+                Paragraph("Local (Plot) Scale Accuracy", self.styles["heading_style"]),
                 Spacer(0, 0.15 * inch),
                 ImageAndFlowables(
                     Image(PLOT_DIAGRAM, 2.0 * inch, 1.96 * inch, mask="auto"),
@@ -165,9 +163,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
         """
         flowables.extend(
             [
-                Paragraph(
-                    "Regional Scale Accuracy", self.styles["heading_style"]
-                ),
+                Paragraph("Regional Scale Accuracy", self.styles["heading_style"]),
                 Spacer(0, 0.15 * inch),
                 Paragraph(regional_str, self.styles["body_style"]),
                 Spacer(0, 0.15 * inch),
@@ -212,9 +208,7 @@ class AccuracyIntroductionFormatter(ReportFormatter):
         subheading_style = self.styles["subheading"]
         flowables.extend(
             [
-                Paragraph(
-                    "Accuracy Across Scales", self.styles["heading_style"]
-                ),
+                Paragraph("Accuracy Across Scales", self.styles["heading_style"]),
                 Spacer(0, 0.15 * inch),
                 Paragraph(riemann_str, self.styles["body_style"]),
                 Spacer(0, 0.15 * inch),

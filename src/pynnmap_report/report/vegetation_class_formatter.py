@@ -1,14 +1,14 @@
 """
 Formatter to create an error matrix of vegetation class
 """
+
 import re
 
 import pandas as pd
+from pynnmap.parser import xml_stand_metadata_parser as xsmp
 from reportlab import platypus as p
 from reportlab.lib import colors
 from reportlab.lib import units as u
-
-from pynnmap.parser import xml_stand_metadata_parser as xsmp
 
 from . import report_styles
 from .report_formatter import ReportFormatter, page_break, txt_to_html

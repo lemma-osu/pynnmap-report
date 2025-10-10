@@ -3,7 +3,6 @@ Report generation CLI program
 """
 
 import click
-
 from pynnmap.parser import parameter_parser_factory as ppf
 
 from ..report import lemma_accuracy_report as lar

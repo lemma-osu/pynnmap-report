@@ -1,14 +1,14 @@
 """
 Formatter for giving an introduction to the report
 """
+
 import itertools
 import locale
 from datetime import datetime
 
+from pynnmap.parser import xml_report_metadata_parser as xrmp
 from reportlab import platypus as p
 from reportlab.lib import units as u
-
-from pynnmap.parser import xml_report_metadata_parser as xrmp
 
 from .. import LEMMA_LOGO
 from .config import GNN_RELEASE_VERSION
@@ -48,9 +48,7 @@ class IntroductionFormatter(ReportFormatter):
             p.Table(
                 [
                     [
-                        p.Image(
-                            LEMMA_LOGO, 2.0 * u.inch, 1.96 * u.inch, mask="auto"
-                        ),
+                        p.Image(LEMMA_LOGO, 2.0 * u.inch, 1.96 * u.inch, mask="auto"),
                         [
                             p.Spacer(1, 0.2 * u.inch),
                             p.Paragraph(
@@ -65,10 +63,7 @@ class IntroductionFormatter(ReportFormatter):
                                 self.styles["sub_title_style"],
                             ),
                             p.Paragraph(
-                                (
-                                    "Model Type:"
-                                    f" {model_type_dict[self.model_type]}"
-                                ),
+                                (f"Model Type: {model_type_dict[self.model_type]}"),
                                 self.styles["sub_title_style"],
                             ),
                             p.Paragraph(
@@ -90,14 +85,10 @@ class IntroductionFormatter(ReportFormatter):
         """
         return [
             p.ImageAndFlowables(
-                p.Image(
-                    rmp.image_path, 3.0 * u.inch, 3.86 * u.inch, mask="auto"
-                ),
+                p.Image(rmp.image_path, 3.0 * u.inch, 3.86 * u.inch, mask="auto"),
                 [
                     p.Paragraph("Overview", self.styles["heading_style"]),
-                    p.Paragraph(
-                        rmp.model_region_overview, self.styles["body_style"]
-                    ),
+                    p.Paragraph(rmp.model_region_overview, self.styles["body_style"]),
                 ],
                 imageSide="left",
                 imageRightPadding=6,
@@ -176,8 +167,7 @@ class IntroductionFormatter(ReportFormatter):
         General model information
         """
         time_str = (
-            "<strong>Report Date:</strong>"
-            f' {datetime.now().strftime("%Y.%m.%d")}'
+            f"<strong>Report Date:</strong> {datetime.now().strftime('%Y.%m.%d')}"
         )
 
         # Model region area
@@ -186,8 +176,8 @@ class IntroductionFormatter(ReportFormatter):
         mr_area_ac = mr_area_ha * self.ACRES_PER_HECTARE
         mr_area_str = (
             "<strong>Model Region Area:</strong>"
-            f' {locale.format("%d", mr_area_ha, True)} hectares'
-            f' ({locale.format("%d", mr_area_ac, True)} acres)'
+            f" {locale.format('%d', mr_area_ha, True)} hectares"
+            f" ({locale.format('%d', mr_area_ac, True)} acres)"
         )
 
         # Forest area
@@ -202,9 +192,7 @@ class IntroductionFormatter(ReportFormatter):
         )
 
         # Model imagery date
-        mr_imagery_str = (
-            f"<strong>Model Imagery Date:</strong> {self.model_year}"
-        )
+        mr_imagery_str = f"<strong>Model Imagery Date:</strong> {self.model_year}"
 
         return [
             p.Paragraph("General Information", self.styles["heading_style"]),
@@ -276,12 +264,8 @@ class IntroductionFormatter(ReportFormatter):
         return (
             year.plot_count,
             [
-                p.Paragraph(
-                    year.assessment_year, self.styles["contact_style_right"]
-                ),
-                p.Paragraph(
-                    str(year.plot_count), self.styles["contact_style_right"]
-                ),
+                p.Paragraph(year.assessment_year, self.styles["contact_style_right"]),
+                p.Paragraph(str(year.plot_count), self.styles["contact_style_right"]),
             ],
         )
 
@@ -351,12 +335,8 @@ class IntroductionFormatter(ReportFormatter):
         plot_table.append(
             [
                 "",
-                p.Paragraph(
-                    "Total Plots", self.styles["contact_style_right_bold"]
-                ),
-                p.Paragraph(
-                    str(total_plots), self.styles["contact_style_right_bold"]
-                ),
+                p.Paragraph("Total Plots", self.styles["contact_style_right_bold"]),
+                p.Paragraph(str(total_plots), self.styles["contact_style_right_bold"]),
             ]
         )
 
@@ -394,9 +374,7 @@ class IntroductionFormatter(ReportFormatter):
         # Header row
         ordination_table = [
             [
-                p.Paragraph(
-                    "<strong>Variable</strong>", self.styles["contact_style"]
-                ),
+                p.Paragraph("<strong>Variable</strong>", self.styles["contact_style"]),
                 p.Paragraph(
                     "<strong>Description</strong>", self.styles["contact_style"]
                 ),

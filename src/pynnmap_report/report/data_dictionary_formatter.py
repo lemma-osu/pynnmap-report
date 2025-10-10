@@ -1,10 +1,10 @@
 """
 Formatter for listing the attribute data dictionary
 """
-from reportlab import platypus as p
-from reportlab.lib import units as u
 
 from pynnmap.parser import xml_stand_metadata_parser as xsmp
+from reportlab import platypus as p
+from reportlab.lib import units as u
 
 from .report_formatter import ReportFormatter, page_break, txt_to_html
 
@@ -76,19 +76,13 @@ class DataDictionaryFormatter(ReportFormatter):
 
                 # Iterate over all code rows and append to the code_table
                 for code in metadata.codes:
-                    code_para = p.Paragraph(
-                        code.code_value, self.styles["code_style"]
-                    )
+                    code_para = p.Paragraph(code.code_value, self.styles["code_style"])
                     description = txt_to_html(code.description)
-                    code_desc_para = p.Paragraph(
-                        description, self.styles["code_style"]
-                    )
+                    code_desc_para = p.Paragraph(description, self.styles["code_style"])
                     code_table.append([code_para, code_desc_para])
 
                 # Convert this to a reportlab table
-                table = p.Table(
-                    code_table, colWidths=[0.75 * u.inch, 4.75 * u.inch]
-                )
+                table = p.Table(code_table, colWidths=[0.75 * u.inch, 4.75 * u.inch])
                 table.setStyle(self.table_styles["code_table"])
 
                 # Create a stack of the field description and field codes
@@ -105,9 +99,7 @@ class DataDictionaryFormatter(ReportFormatter):
             dictionary_table.append([field_para, description_table])
 
         # Format the dictionary table into a reportlab table
-        table = p.Table(
-            dictionary_table, colWidths=[1.85 * u.inch, 5.65 * u.inch]
-        )
+        table = p.Table(dictionary_table, colWidths=[1.85 * u.inch, 5.65 * u.inch])
         table.setStyle(self.table_styles["data_dictionary"])
         story.append(table)
 

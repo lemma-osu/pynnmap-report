@@ -1,9 +1,10 @@
 """
 Paragraph, table and document styles used in report creation
 """
-from reportlab import platypus as p
-from reportlab.lib import colors, pagesizes, units as u
 
+from reportlab import platypus as p
+from reportlab.lib import colors, pagesizes
+from reportlab.lib import units as u
 from reportlab.pdfgen import canvas
 
 
@@ -40,8 +41,7 @@ def title(canvas_, _doc):
     canvas_.saveState()
     _set_background(canvas_, portrait_=True)
     lemma_img = (
-        "L:/resources/code/models/accuracy_assessment/report/images/"
-        "lemma_logo.gif"
+        "L:/resources/code/models/accuracy_assessment/report/images/lemma_logo.gif"
     )
     canvas_.drawImage(
         lemma_img,

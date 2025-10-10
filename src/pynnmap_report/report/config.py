@@ -1,6 +1,7 @@
 """
 Specialized configuration parameters
 """
+
 import os
 
 GNN_RELEASE_VERSION = "2023.1"
