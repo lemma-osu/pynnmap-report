@@ -176,8 +176,8 @@ class IntroductionFormatter(ReportFormatter):
         mr_area_ac = mr_area_ha * self.ACRES_PER_HECTARE
         mr_area_str = (
             "<strong>Model Region Area:</strong>"
-            f" {locale.format('%d', mr_area_ha, True)} hectares"
-            f" ({locale.format('%d', mr_area_ac, True)} acres)"
+            f" {locale.format_string('%d', mr_area_ha, True)} hectares"
+            f" ({locale.format_string('%d', mr_area_ac, True)} acres)"
         )
 
         # Forest area
@@ -186,8 +186,8 @@ class IntroductionFormatter(ReportFormatter):
         forest_area_str = (
             "<strong>Forest Area:</strong> {} hectares ({} acres) - {:.1f}%"
         ).format(
-            locale.format("%d", forest_area_ha, True),
-            locale.format("%d", forest_area_ac, True),
+            locale.format_string("%d", forest_area_ha, True),
+            locale.format_string("%d", forest_area_ac, True),
             forest_area_ha / mr_area_ha * 100.0,
         )
 

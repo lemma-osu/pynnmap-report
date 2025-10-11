@@ -11,8 +11,6 @@ from reportlab.lib import units as u
 from .styles.paragraph_styles import get_paragraph_styles
 from .styles.table_styles import get_table_styles
 
-STYLES = get_paragraph_styles("Open-Sans")
-
 
 def page_break(orientation):
     """
@@ -22,41 +20,6 @@ def page_break(orientation):
         p.NextPageTemplate(orientation),
         p.PageBreak(),
     ]
-
-
-def make_figure_table(image_files):
-    """
-    Create a table of images from existing image files
-    """
-    cols = 2
-    table_data = []
-    row_data = []
-    for i, fn in enumerate(image_files):
-        row_data.append(p.Image(fn, 3.4 * u.inch, 3.0 * u.inch))
-        if (i % cols) == (cols - 1):
-            table_data.append(row_data)
-            row_data = []
-
-    # Determine if there are any images left to print
-    if len(row_data) != 0:
-        for _ in range(len(row_data), cols):
-            row_data.append(p.Paragraph("", STYLES["body_style"]))
-        table_data.append(row_data)
-
-    # Style this into a reportlab table and add to the story
-    width = 3.75 * u.inch
-    table = p.Table(table_data, colWidths=[width, width])
-    table.setStyle(
-        p.TableStyle(
-            [
-                ("ALIGNMENT", (0, 0), (-1, -1), "CENTER"),
-                ("VALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("TOPPADDING", (0, 0), (-1, -1), 6.0),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6.0),
-            ]
-        )
-    )
-    return table
 
 
 def txt_to_html(in_str):
