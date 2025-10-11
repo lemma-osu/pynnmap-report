@@ -3,7 +3,7 @@ from reportlab.lib import fonts
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-from ..config import FontConfig
+from ..config import FONTS as _FONTS
 
 
 def register_font(font_name, file_name):
@@ -31,21 +31,21 @@ def load_fonts():
             "regular": register_custom_font(
                 "Garamond",
                 "Garamond",
-                FontConfig.GARAMOND["regular_fn"],
+                _FONTS["GARAMOND"]["regular_fn"],
                 False,
                 False,
             ),
             "bold": register_custom_font(
                 "Garamond",
                 "Garamond-Bold",
-                FontConfig.GARAMOND["bold_fn"],
+                _FONTS["GARAMOND"]["bold_fn"],
                 True,
                 False,
             ),
             "italic": register_custom_font(
                 "Garamond",
                 "Garamond-Italic",
-                FontConfig.GARAMOND["italic_fn"],
+                _FONTS["GARAMOND"]["italic_fn"],
                 False,
                 True,
             ),
@@ -60,28 +60,28 @@ def load_fonts():
             "regular": register_custom_font(
                 "Open-Sans",
                 "Open-Sans",
-                FontConfig.OPEN_SANS["regular_fn"],
+                _FONTS["OPEN_SANS"]["regular_fn"],
                 False,
                 False,
             ),
             "bold": register_custom_font(
                 "Open-Sans",
                 "Open-Sans-Bold",
-                FontConfig.OPEN_SANS["bold_fn"],
+                _FONTS["OPEN_SANS"]["bold_fn"],
                 True,
                 False,
             ),
             "italic": register_custom_font(
                 "Open-Sans",
                 "Open-Sans-Italic",
-                FontConfig.OPEN_SANS["italic_fn"],
+                _FONTS["OPEN_SANS"]["italic_fn"],
                 False,
                 True,
             ),
             "bold_italic": register_custom_font(
                 "Open-Sans",
                 "Open-Sans-Bold-Italic",
-                FontConfig.OPEN_SANS["bold_italic_fn"],
+                _FONTS["OPEN_SANS"]["bold_italic_fn"],
                 True,
                 True,
             ),
