@@ -1,11 +1,12 @@
 # Build files
 build
 dist
-*.egg-info
-*.pyc
+__pycache__/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
 
-# Miscellaneous files
-.sourcery.yaml
-.idea
-.vscode
-*.swp
+# Config files
+config.yaml

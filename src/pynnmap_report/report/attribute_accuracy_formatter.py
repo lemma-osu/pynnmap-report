@@ -189,7 +189,7 @@ class AttributeAccuracyFormatter(ReportFormatter):
             index=obs,
             columns=prd,
             values=np.array(em_data["COUNT"]),
-            aggfunc=sum,
+            aggfunc="sum",
             margins=True,
             dropna=False,
         ).values
