@@ -20,9 +20,6 @@ from .report_formatter import ReportFormatter, page_break
 
 
 class AccuracyIntroductionFormatter(ReportFormatter):
-    def __init__(self):
-        super().__init__()
-
     def run_formatter(self):
         """
         Create an introduction to the AttributeAccuracy section

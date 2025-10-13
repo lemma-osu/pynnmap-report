@@ -126,16 +126,16 @@ class ObservedPredictedScatterplot(Scatterplot):
         def _write_statistic(x_pos: float, y_pos: float, text: str) -> None:
             plt.text(x_pos, y_pos, text, transform=axes.transAxes, size=5.0)
 
-        _write_statistic(0.05, 0.93, "Correlation coeff.: %.4f" % correlation)
-        _write_statistic(0.05, 0.89, "Normalized RMSE: %.4f" % rmse)
-        _write_statistic(0.05, 0.85, "R-square: %.4f" % r2)
+        _write_statistic(0.05, 0.93, f"Correlation coeff.: {correlation:.4f}")
+        _write_statistic(0.05, 0.89, f"Normalized RMSE: {rmse:.4f}")
+        _write_statistic(0.05, 0.85, f"R-square: {r2:.4f}")
         rect_y_min, rect_y_size = 0.84, 0.12
 
         if "avg_plot_count" in kwargs:
             _write_statistic(
                 0.05,
                 0.81,
-                "Average plot count: %.1f" % kwargs["avg_plot_count"],
+                f"Average plot count: {kwargs['avg_plot_count']:.1f}",
             )
             rect_y_min, rect_y_size = 0.80, 0.16
 
@@ -143,7 +143,7 @@ class ObservedPredictedScatterplot(Scatterplot):
             _write_statistic(
                 0.05,
                 0.77,
-                "Hexagon count: %d" % kwargs["hexagon_count"],
+                f"Hexagon count: {kwargs['hexagon_count']}",
             )
             rect_y_min, rect_y_size = 0.76, 0.20
 
